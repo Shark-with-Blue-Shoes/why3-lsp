@@ -41,5 +41,5 @@ let interp buf =
     | _ -> print_string "strange error"
 
 let () =
-    let p = Lwt.bind (Lwt_io.read_line Lwt_io.stdin) (fun str -> Lwt_io.printf "You typed %s\n" str) in
+  let p = Lwt.bind (Lwt_io.read_line Lwt_io.stdin) (fun str -> Lwt.return (interp str)) in
     Lwt_main.run p;
