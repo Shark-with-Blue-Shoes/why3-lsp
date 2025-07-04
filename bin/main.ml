@@ -41,9 +41,5 @@ let interp buf =
     | _ -> print_string "strange error"
 
 let () =
-  let p : unit Lwt.t =
-    let%lwt line_1 = Lwt_io.(read_line stdin) in
-    let%lwt line_2 = Lwt_io.(read_line stdin) in
-    Lwt_io.printf "%s and %s\n" line_1 line_2
-  in
-  Lwt_main.run p
+    let p = Lwt.bind (Lwt_io.read_line Lwt_io.stdin) (fun str -> Lwt_io.printf "You typed %s\n" str) in
+    Lwt_main.run p;
