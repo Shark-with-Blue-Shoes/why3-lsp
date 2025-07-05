@@ -13,7 +13,6 @@ module Constant = struct
 end
 
 let assert_jsonrpc_version json =
-
   let jsonrpc = json |> member "version" |> to_string in
   if not (String.equal jsonrpc Constant.jsonrpcv)
   then
@@ -24,7 +23,7 @@ let is_even num =
     match num mod 2 with 
     | 0 ->  printf "%d is even!\n" num
     | 1 -> printf "%d is odd!\n" num
-    | _ -> assert false
+    | _ -> raise (Invalid_argument "neg num or fraction")
 
 let interp buf = 
   let json = Basic.from_string buf in
