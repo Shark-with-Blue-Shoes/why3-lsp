@@ -22,8 +22,8 @@ let assert_jsonrpc_version json =
 
 let is_even num =  
     match num mod 2 with 
-    | 0 ->  printf "number is even!"
-    | 1 -> printf "number is odd!"
+    | 0 ->  printf "%d is even!\n" num
+    | 1 -> printf "%d is odd!\n" num
     | _ -> assert false
 
 let interp buf = 
@@ -34,5 +34,5 @@ let interp buf =
     is_even num;
   with
     | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n" x
-    | Json_error err -> printf "Does not fulfill JSON RPC 2.0 protocol: %s" err
-    | _ -> print_string "strange error"
+    | Json_error err -> printf "Does not fulfill JSON RPC 2.0 protocol: %s\n" err
+    | _ as e -> printf "strange error: %s\n" (Printexc.to_string e)

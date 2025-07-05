@@ -1,2 +1,5 @@
 (test
- (name test_why3_lsp))
+ (name testlsp)
+ (libraries why3_lsp lwt lwt.unix)
+ (preprocess (pps lwt_ppx))
+ )
