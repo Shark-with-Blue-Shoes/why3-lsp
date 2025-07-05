@@ -1,45 +1,8 @@
-open Yojson
-open Yojson.Basic.Util
-open In_channel
-open Printf
 open Lwt
-
-
-module Constant = struct
-  let jsonrpc = "jsonrpc"
-  let jsonrpcv = "2.0"
-  let id = "id"
-  let method_ = "method"
-  let params = "params"
-  let result = "result"
-  let error = "error"
-end
-
-let assert_jsonrpc_version json =
-
-  let jsonrpc = json |> member "version" |> to_string in
-  if not (String.equal jsonrpc Constant.jsonrpcv)
-  then
-    raise (Json_error ("invalid packet: jsonrpc version doesn't match " ^ jsonrpc))
-;;
-
-let is_even num =  
-    match num mod 2 with 
-    | 0 ->  printf "number is even!"
-    | 1 -> printf "number is odd!"
-    | _ -> assert false
-
-let interp buf = 
-  let json = Basic.from_string buf in
-  try
-    assert_jsonrpc_version json;
-    let num = json |> member "num" |> to_int in 
-    is_even num;
-  with
-    | Yojson__Basic.Util.Type_error (x, p) -> printf "Type error: %s\n" x
-    | Json_error err -> printf "Does not fulfill JSON RPC 2.0 protocol: %s" err
-    | _ -> print_string "strange error"
+open Why3_lsp.Rpc
 
 let () =
-  let p = Lwt.bind (Lwt_io.read_line Lwt_io.stdin) (fun str -> Lwt.return (interp str)) in
+  let p =  
+    let%lwt input = (Lwt_io.read_line Lwt_io.stdin) in
+    Lwt.return (interp input) in
     Lwt_main.run p;

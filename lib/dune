@@ -1,2 +1,4 @@
 (library
- (name why3_lsp))
+ (name why3_lsp)
+ (modules rpc)
+  (libraries yojson lwt lwt.unix))
