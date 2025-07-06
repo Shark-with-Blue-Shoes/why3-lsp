@@ -33,7 +33,6 @@ let consumer_thread_func () =
         Mutex.unlock queue_mutex; (* Release mutex after accessing the queue *)
         m
       in
-      Printf.printf "[Consumer] Processing: %s\n%!" msg;
       interp msg;
     done
   with End_of_file ->

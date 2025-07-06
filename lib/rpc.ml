@@ -21,18 +21,16 @@ let assert_jsonrpc_version json =
 
 let is_even num =  
     match num mod 2 with 
-    | 0 ->  printf "%d is even!\n" num
-    | 1 -> printf "%d is odd!\n" num
+    | 0 ->  printf "%d is even!\n%!" num
+    | 1 -> printf "%d is odd!\n%!" num
     | _ -> raise (Invalid_argument "neg num or fraction")
 
 let interp buf = 
   try
-  let json = Basic.from_string buf in
-    assert_jsonrpc_version json;
+    let json = Basic.from_string buf in
     let num = json |> member "num" |> to_int in 
     is_even num;
   with
-    | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n" x
-    | Json_error err -> printf "Does not fulfill JSON RPC 2.0 protocol: %s\n" err
-    | Yojson__Common.Json_error err -> printf "incorrect JSON syntax %s\n" err
-    | _ as e -> printf "strange error: %s\n" (Printexc.to_string e)
+    | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n%!" x
+    | Json_error err -> printf "Does not fulfill JSON RPC 2.0 protocol: %s\n%!" err
+    | _ as e -> printf "strange error: %s\n%!" (Printexc.to_string e)
