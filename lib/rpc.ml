@@ -26,8 +26,7 @@ let is_even num =
     | _ -> raise (Invalid_argument "neg num or fraction")
 
 let interp buf = 
-  Lwt_io.printf "input: %s" buf;
-  (*let json = Basic.from_string buf in
+  let json = Basic.from_string buf in
   try
     assert_jsonrpc_version json;
     let num = json |> member "num" |> to_int in 
@@ -35,4 +34,4 @@ let interp buf =
   with
     | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n" x
     | Json_error err -> printf "Does not fulfill JSON RPC 2.0 protocol: %s\n" err
-    | _ as e -> printf "strange error: %s\n" (Printexc.to_string e)*)
+    | _ as e -> printf "strange error: %s\n" (Printexc.to_string e)

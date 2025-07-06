@@ -1,5 +1,5 @@
 (test
  (name testlsp)
- (libraries why3_lsp lwt lwt.unix logs.lwt)
+ (libraries why3_lsp)
  (preprocess (pps lwt_ppx))
  (flags (:standard -w -21)))
