@@ -26,12 +26,13 @@ let is_even num =
     | _ -> raise (Invalid_argument "neg num or fraction")
 
 let interp buf = 
-  let json = Basic.from_string buf in
   try
+  let json = Basic.from_string buf in
     assert_jsonrpc_version json;
     let num = json |> member "num" |> to_int in 
     is_even num;
   with
     | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n" x
     | Json_error err -> printf "Does not fulfill JSON RPC 2.0 protocol: %s\n" err
+    | Yojson__Common.Json_error err -> printf "incorrect JSON syntax %s\n" err
     | _ as e -> printf "strange error: %s\n" (Printexc.to_string e)
