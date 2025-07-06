@@ -28,6 +28,7 @@ let is_even num =
 let interp buf = 
   try
     let json = Basic.from_string buf in
+    assert_jsonrpc_version json;
     let num = json |> member "num" |> to_int in 
     is_even num;
   with
