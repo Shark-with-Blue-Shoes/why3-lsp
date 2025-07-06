@@ -1,6 +1,6 @@
 (executable
  (public_name why3_lsp)
  (name main)
- (libraries why3_lsp yojson)
+ (libraries why3_lsp yojson threads)
  (preprocess (pps lwt_ppx))
  (flags (:standard -w -32 -w -34 -w -27 -w -33)))
