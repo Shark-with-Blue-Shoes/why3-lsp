@@ -10,36 +10,91 @@ module Constant = struct
 end
 
 module Id = struct
+  open Yojson.Basic.Util
+
   type t =
     [ `String of string
     | `Int of int
-    | `Null
     ]
 
   let yojson_of_t (t : t) : Yojson.Basic.t = 
     match t with
-    | `Null -> `Null
     | `Int i -> `Int i
     | `String str -> `String str
 
-  let t_of_yojson json =
-    let open Yojson.Basic.Util in
-    let get_t id =
+  let t_of_yojson json : t =
+    let get_id id : t =
       match id with
-      | `Null -> `Null
       | `Int i -> `Int i
       | `String str -> `String str
-      | err -> raise (Type_error ("not correct type of id ", err))
+      | err -> raise (Type_error ("Not correct type of id ", err))
     in
-    json |> member "id" |> get_t
+    json |> member "id" |> get_id
 
 end
 
-module Notification = struct
 
+module Structured = struct
+  open Yojson.Basic.Util
+  type t =
+    [ `Assoc of (string * Yojson.Basic.t) list
+    | `List of Yojson.Basic.t list
+    | `Null
+    ]
+    
+  let t_of_yojson json : t =
+    let get_structured (params : Yojson.Basic.t) : t =
+      match params with
+      | `Assoc x -> `Assoc x
+      | `List ls ->  `List ls
+      | `Null -> `Null
+      | err -> raise (Type_error ("Not correct type of param ", err)) in
+    json |> member "param" |> get_structured
+
+  let yojson_of_t (t : t) : Yojson.Basic.t =
+    match t with 
+    | `Assoc x -> `Assoc x
+    | `List ls ->  `List ls
+    | `Null -> `Null
+    
 end
 
 module Request = struct
+  open Yojson.Basic.Util
+  type t =
+    { id : Id.t
+    ; method_ : string
+    ; params : Structured.t
+    }
+
+  let t_of_yojson json : t = 
+    {
+      id = Id.t_of_yojson json;
+      method_ = json |> member "method" |> to_string ;
+      params = Structured.t_of_yojson json
+    }
+
+  let yojson_of_t t : Yojson.Basic.t =
+    `Assoc (["id",  (Id.yojson_of_t t.id); "method" , (`String t.method_); "params", (Structured.yojson_of_t t.params)])
+     
+end
+
+module Notification = struct 
+  open Yojson.Basic.Util
+  type t =
+    { method_ : string
+    ; params : Structured.t
+    }
+
+  let t_of_yojson json : t = 
+    {
+      method_ = json |> member "method" |> to_string ;
+      params = Structured.t_of_yojson json
+    }
+
+  let yojson_of_t t : Yojson.Basic.t =
+    `Assoc (["method" , (`String t.method_); "params", (Structured.yojson_of_t t.params)])
+     
 end
 
 let assert_jsonrpc_version json =
