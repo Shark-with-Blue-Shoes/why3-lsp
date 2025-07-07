@@ -1,4 +1,20 @@
+exception Missing_Member of string
+
 open Yojson.Basic.Util
+
+(*This gets a required member*)
+let get_req_mem json name : Yojson.Basic.t = 
+  let mem = member name json in
+  match mem with
+  | `Null -> raise (Missing_Member (Printf.sprintf "%s is missing!\n" name))
+  | _ -> mem
+
+(*This gets an option member*)
+let get_opt_mem json name : Yojson.Basic.t = 
+  let mem = member name json in
+  match mem with
+  | `Null -> `Null
+  | m -> m
 
 module Constant = struct
   let jsonrpc = "jsonrpc"
@@ -26,6 +42,7 @@ module Id = struct
     match json with
     | `Int i -> `Int i
     | `String str -> `String str
+    | `Null -> raise (Missing_Member "Id is missing!")
     | err -> raise (Type_error ("Not correct type of id ", err))
 
 end
@@ -62,9 +79,9 @@ module Request = struct
 
   let t_of_yojson json : t = 
     {
-      id = json |> member "id" |> Id.t_of_yojson;
-      method_ = json |> member "method" |> to_string ;
-      params = json |> member "params" |> Structured.t_of_yojson
+      id = get_req_mem json "id" |> Id.t_of_yojson;
+      method_ = get_req_mem json "method" |> to_string ;
+      params = get_opt_mem json "params" |> Structured.t_of_yojson
     }
 
   let yojson_of_t t : Yojson.Basic.t =
@@ -80,8 +97,8 @@ module Notification = struct
 
   let t_of_yojson json : t = 
     {
-      method_ = json |> member "method" |> to_string ;
-      params = json |> member "params" |> Structured.t_of_yojson
+      method_ = get_req_mem json "method" |> to_string ;
+      params = get_opt_mem json  "params" |> Structured.t_of_yojson
     }
 
   let yojson_of_t t : Yojson.Basic.t =
@@ -163,9 +180,9 @@ module Response = struct
     
     let t_of_yojson (json : Yojson.Basic.t) : t =
       {
-        code = json |> member "code" |> Code.t_of_yojson;
-        message = json |> member "message" |> to_string;
-        data = json |> member "data"
+        code = get_req_mem json "code" |> Code.t_of_yojson;
+        message = get_req_mem json "message" |> to_string;
+        data = get_req_mem json "data"
     }
   end
 
@@ -183,15 +200,15 @@ module Response = struct
   *)
   
   let t_of_yojson json : t =
-    let res = json |> member "result" in
+    let res = get_opt_mem json "result" in
     match res with
     | `Null ->  {
       id = Id.t_of_yojson json;
-      result = Error (json |> member "error" |> Error.t_of_yojson) 
+      result = Error (get_req_mem json "error" |> Error.t_of_yojson) 
     }
     | _ -> {
       id = Id.t_of_yojson json;
-      result = Ok (json |> member "result") 
+      result = Ok res 
     }
 
   let yojson_of_t t : Yojson.Basic.t = 
@@ -205,7 +222,7 @@ module Response = struct
 end
 
 let assert_jsonrpc_version json =
-    let jsonrpc = json |> member "version" |> to_string in
+    let jsonrpc = get_req_mem json "version" |> to_string in
     if not (String.equal jsonrpc Constant.jsonrpcv)
     then
       raise (Yojson.Json_error ("invalid packet: jsonrpc version doesn't match " ^ jsonrpc))

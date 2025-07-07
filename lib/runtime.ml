@@ -1,5 +1,4 @@
 open Yojson
-open Yojson.Basic.Util
 open Printf
 open Rpc
 
@@ -9,22 +8,17 @@ let queue_mutex = Mutex.create ()
 let queue_condition = Condition.create ()
 let shutdown_flag = ref false (* A flag to signal consumer to stop *)
 
-let is_even num =  
-    match num mod 2 with 
-    | 0 ->  printf "%d is even!\n%!" num
-    | 1 -> printf "%d is odd!\n%!" num
-    | _ -> raise (Invalid_argument "neg num or fraction")
-
 let interp buf =
   try
     let json = Basic.from_string buf in
     assert_jsonrpc_version json;
-    let num = json |> member "num" |> to_int in
-    is_even num;
+    let req = Request.t_of_yojson json in
+    printf "This is the method requested: %s\n%!" req.method_
   with
+    | Missing_Member err -> printf "Missing Member: %s\n%!" err
     | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n%!" x
     | Json_error err -> printf "Does not fulfill JSON RPC 2.0 protocol: %s\n%!" err
-    | _ as e -> printf "strange error: %s\n%!" (Printexc.to_string e)
+    | _ as e -> printf "Strange error: %s\n%!" (Printexc.to_string e)
 
 (* Consumer thread function: Continuously pops messages from the queue and processes them *)
 let consumer_thread_func () =
