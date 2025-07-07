@@ -1,4 +1,4 @@
-open Why3_lsp.Rpc
+open Why3_lsp.Runtime
 
 (* Main program entry point *)
 let () =
