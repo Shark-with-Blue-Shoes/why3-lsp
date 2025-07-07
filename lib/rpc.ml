@@ -23,13 +23,10 @@ module Id = struct
     | `String str -> `String str
 
   let t_of_yojson json : t =
-    let get_id id : t =
-      match id with
-      | `Int i -> `Int i
-      | `String str -> `String str
-      | err -> raise (Type_error ("Not correct type of id ", err))
-    in
-    json |> member "id" |> get_id
+    match json with
+    | `Int i -> `Int i
+    | `String str -> `String str
+    | err -> raise (Type_error ("Not correct type of id ", err))
 
 end
 
@@ -42,14 +39,12 @@ module Structured = struct
     | `Null
     ]
     
-  let t_of_yojson json : t =
-    let get_structured (params : Yojson.Basic.t) : t =
-      match params with
-      | `Assoc x -> `Assoc x
-      | `List ls ->  `List ls
-      | `Null -> `Null
-      | err -> raise (Type_error ("Not correct type of param ", err)) in
-    json |> member "param" |> get_structured
+  let t_of_yojson params : t =
+    match params with
+    | `Assoc x -> `Assoc x
+    | `List ls ->  `List ls
+    | `Null -> `Null
+    | err -> raise (Type_error ("Not correct type of param ", err))
 
   let yojson_of_t (t : t) : Yojson.Basic.t =
     match t with 
@@ -69,9 +64,9 @@ module Request = struct
 
   let t_of_yojson json : t = 
     {
-      id = Id.t_of_yojson json;
+      id = json |> member "id" |> Id.t_of_yojson;
       method_ = json |> member "method" |> to_string ;
-      params = Structured.t_of_yojson json
+      params = json |> member "params" |> Structured.t_of_yojson
     }
 
   let yojson_of_t t : Yojson.Basic.t =
@@ -89,7 +84,7 @@ module Notification = struct
   let t_of_yojson json : t = 
     {
       method_ = json |> member "method" |> to_string ;
-      params = Structured.t_of_yojson json
+      params = json |> member "params" |> Structured.t_of_yojson
     }
 
   let yojson_of_t t : Yojson.Basic.t =
@@ -203,6 +198,11 @@ open Yojson.Basic.Util
       id = Id.t_of_yojson json;
       result = Ok (json |> member "result") 
     }
+
+  let yojson_of_t t : Yojson.Basic.t = 
+    match t.result with
+      | Error x -> `Assoc ["id" , Id.yojson_of_t t.id; "error", Error.yojson_of_t x]
+      | Ok x -> `Assoc ["id" , Id.yojson_of_t t.id; "result", x]
 
   let make ~id ~result = { id; result }
   let ok id result = make ~id ~result:(Ok result)
