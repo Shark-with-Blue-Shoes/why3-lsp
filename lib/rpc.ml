@@ -85,8 +85,7 @@ module Request = struct
     }
 
   let yojson_of_t t : Yojson.Basic.t =
-    `Assoc (["id",  (Id.yojson_of_t t.id); "method" , (`String t.method_); "params", (Structured.yojson_of_t t.params)])
-     
+    `Assoc ["id",  (Id.yojson_of_t t.id); "method" , (`String t.method_); "params", (Structured.yojson_of_t t.params)] 
 end
 
 module Notification = struct 

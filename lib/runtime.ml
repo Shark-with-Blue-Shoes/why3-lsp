@@ -8,12 +8,22 @@ let queue_mutex = Mutex.create ()
 let queue_condition = Condition.create ()
 let shutdown_flag = ref false (* A flag to signal consumer to stop *)
 
+let has_id json = 
+  let open Yojson.Basic.Util in
+  match json |> member "id" with
+  | `Null -> false
+  | _ -> true
+
+
 let interp buf =
   try
     let json = Basic.from_string buf in
-    assert_jsonrpc_version json;
-    let req = Request.t_of_yojson json in
-    printf "This is the method requested: %s\n%!" req.method_
+    if has_id json then
+      let req = Request.t_of_yojson json in
+      printf "This is the method requested in the request: %s\n%!" req.method_
+    else
+      let not = Notification.t_of_yojson json in 
+      printf "This is the method requested in the notification: %s\n#!" not.method_
   with
     | Missing_Member err -> printf "Missing Member: %s\n%!" err
     | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n%!" x
