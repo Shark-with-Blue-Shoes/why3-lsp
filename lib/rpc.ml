@@ -93,8 +93,120 @@ module Notification = struct
     }
 
   let yojson_of_t t : Yojson.Basic.t =
-    `Assoc (["method" , (`String t.method_); "params", (Structured.yojson_of_t t.params)])
+    `Assoc ["method" , (`String t.method_); "params", (Structured.yojson_of_t t.params)]
      
+end
+
+module Response = struct
+open Yojson.Basic.Util
+  module Error = struct
+    open Yojson.Basic.Util
+    module Code = struct
+      type t =
+      | ParseError
+      | InvalidRequest
+      | MethodNotFound
+      | InvalidParams
+      | InternalError
+      (* the codes below are LSP specific *)
+      | ServerErrorStart
+      | ServerErrorEnd
+      | ServerNotInitialized
+      | UnknownErrorCode
+      | RequestFailed
+      | ServerCancelled
+      | ContentModified
+      | RequestCancelled
+      (* all other codes are custom *)
+      | Other of int
+     
+      let of_int = function
+      | -32700 -> ParseError
+      | -32600 -> InvalidRequest
+      | -32601 -> MethodNotFound
+      | -32602 -> InvalidParams
+      | -32603 -> InternalError
+      | -32099 -> ServerErrorStart
+      | -32000 -> ServerErrorEnd
+      | -32002 -> ServerNotInitialized
+      | -32001 -> UnknownErrorCode
+      | -32800 -> RequestCancelled
+      | -32801 -> ContentModified
+      | -32802 -> ServerCancelled
+      | -32803 -> RequestFailed
+      | code -> Other code
+      ;;
+     
+      let to_int = function
+      | ParseError -> -32700
+      | InvalidRequest -> -32600
+      | MethodNotFound -> -32601
+      | InvalidParams -> -32602
+      | InternalError -> -32603
+      | ServerErrorStart -> -32099
+      | ServerErrorEnd -> -32000
+      | ServerNotInitialized -> -32002
+      | UnknownErrorCode -> -32001
+      | RequestCancelled -> -32800
+      | ContentModified -> -32801
+      | ServerCancelled -> -32802
+      | RequestFailed -> -32803
+      | Other code -> code
+      ;;
+     
+      let t_of_yojson (json : Yojson.Basic.t) =
+        match json with
+        | `Int i -> of_int i
+        | err -> raise (Type_error ("Not correct type of param ", err))
+        ;;
+     
+          let yojson_of_t t = `Int (to_int t)
+    end
+    type t =
+      { code : Code.t
+      ; message : string
+      ; data : Yojson.Basic.t
+      }
+   
+    let yojson_of_t t : Yojson.Basic.t =
+      `Assoc ["code" , (`Int (Code.to_int t.code)); "message", (`String t.message); "data", t.data]
+    
+    let t_of_yojson (json : Yojson.Basic.t) : t =
+      {
+        code = json |> member "code" |> Code.t_of_yojson;
+        message = json |> member "message" |> to_string;
+        data = json |> member "data"
+    }
+  end
+
+  type t =
+    { id : Id.t
+    ; result : (Yojson.Basic.t, Error.t) Result.t
+    }
+
+  (*
+  JSON: {
+  "id": _,
+  opt "result": _,
+  opt "error": _,
+  }
+  *)
+  
+  let t_of_yojson json : t =
+    let res = json |> member "result" in
+    match res with
+    | `Null ->  {
+      id = Id.t_of_yojson json;
+      result = Error (json |> member "error" |> Error.t_of_yojson) 
+    }
+    | _ -> {
+      id = Id.t_of_yojson json;
+      result = Ok (json |> member "result") 
+    }
+
+  let make ~id ~result = { id; result }
+  let ok id result = make ~id ~result:(Ok result)
+  let error id error = make ~id ~result:(Error error)
 end
 
 let assert_jsonrpc_version json =
