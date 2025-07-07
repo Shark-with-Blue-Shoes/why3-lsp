@@ -1,3 +1,4 @@
+open Yojson.Basic.Util
 
 module Constant = struct
   let jsonrpc = "jsonrpc"
@@ -10,7 +11,6 @@ module Constant = struct
 end
 
 module Id = struct
-  open Yojson.Basic.Util
 
   type t =
     [ `String of string
@@ -32,7 +32,6 @@ end
 
 
 module Structured = struct
-  open Yojson.Basic.Util
   type t =
     [ `Assoc of (string * Yojson.Basic.t) list
     | `List of Yojson.Basic.t list
@@ -55,7 +54,6 @@ module Structured = struct
 end
 
 module Request = struct
-  open Yojson.Basic.Util
   type t =
     { id : Id.t
     ; method_ : string
@@ -75,7 +73,6 @@ module Request = struct
 end
 
 module Notification = struct 
-  open Yojson.Basic.Util
   type t =
     { method_ : string
     ; params : Structured.t
@@ -93,9 +90,7 @@ module Notification = struct
 end
 
 module Response = struct
-open Yojson.Basic.Util
   module Error = struct
-    open Yojson.Basic.Util
     module Code = struct
       type t =
       | ParseError
@@ -210,7 +205,6 @@ open Yojson.Basic.Util
 end
 
 let assert_jsonrpc_version json =
-  let open Yojson.Basic.Util in
     let jsonrpc = json |> member "version" |> to_string in
     if not (String.equal jsonrpc Constant.jsonrpcv)
     then
