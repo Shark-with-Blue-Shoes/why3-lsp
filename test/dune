@@ -1,5 +1,0 @@
-(test
- (name testlsp)
- (libraries why3_lsp)
- (preprocess (pps lwt_ppx))
- (flags (:standard -w -21)))
