@@ -23,7 +23,7 @@ let interp buf =
       printf "This is the method requested in the request: %s\n%!" req.method_
     else
       let not = Notification.t_of_yojson json in 
-      printf "This is the method requested in the notification: %s\n#!" not.method_
+      printf "This is the method requested in the notification: %s\n%!" not.method_
   with
     | Missing_Member err -> printf "Missing Member: %s\n%!" err
     | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n%!" x
