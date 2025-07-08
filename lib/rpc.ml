@@ -45,6 +45,11 @@ module Id = struct
     | `Null -> raise (Missing_Member "Id is missing!")
     | err -> raise (Type_error ("Not correct type of id ", err))
 
+  let to_str (t : t) =
+  match t with
+    | `String x -> x
+    | `Int x -> Printf.sprintf "%d" x
+
 end
 
 
@@ -52,7 +57,7 @@ module Structured = struct
   type t =
     [ `Assoc of (string * Yojson.Basic.t) list
     | `List of Yojson.Basic.t list
-    | `Null
+    | `Null 
     ]
     
   let t_of_yojson params : t =
@@ -227,3 +232,9 @@ let assert_jsonrpc_version json =
       raise (Yojson.Json_error ("invalid packet: jsonrpc version doesn't match " ^ jsonrpc))
 ;;
 
+module Packet = struct
+  type t =
+    | Notification of Notification.t
+    | Request of Request.t
+    | Response of Response.t
+end

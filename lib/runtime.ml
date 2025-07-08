@@ -20,10 +20,10 @@ let interp buf =
     let json = Basic.from_string buf in
     if has_id json then
       let req = Request.t_of_yojson json in
-      printf "This is the method requested in the request: %s\n%!" req.method_
+      printf "{id: %s, method: %s, params: %s}\n%!" (Id.to_str req.id) req.method_ (Basic.to_string (Structured.yojson_of_t req.params))
     else
       let not = Notification.t_of_yojson json in 
-      printf "This is the method requested in the notification: %s\n%!" not.method_
+      printf "{method: %s, params: %s}\n%!" not.method_ (Basic.to_string (Structured.yojson_of_t not.params))
   with
     | Missing_Member err -> printf "Missing Member: %s\n%!" err
     | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n%!" x
