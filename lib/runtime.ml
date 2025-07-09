@@ -9,12 +9,6 @@ let queue_mutex = Mutex.create ()
 let queue_condition = Condition.create ()
 let shutdown_flag = ref false (* A flag to signal consumer to stop *)
 
-let has_id json = 
-  let open Yojson.Basic.Util in
-  match json |> member "id" with
-  | `Null -> false
-  | _ -> true
-
 let interp buf =
   try
   let (header_str, json) = split_header_json buf in

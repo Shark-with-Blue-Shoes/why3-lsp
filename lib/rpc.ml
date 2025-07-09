@@ -2,6 +2,12 @@ exception Missing_Member of string
 
 open Yojson.Basic.Util
 
+let has_id json = 
+  let open Yojson.Basic.Util in
+  match json |> member "id" with
+  | `Null -> false
+  | _ -> true
+
 (*This gets a required member*)
 let get_req_mem json name : Yojson.Basic.t = 
   let mem = member name json in
