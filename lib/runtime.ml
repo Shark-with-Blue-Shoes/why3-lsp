@@ -19,7 +19,7 @@ let interp buf =
   try
   let (header_str, json) = split_header_json buf in
     let (content_length, content_type) = split_header header_str in
-    printf "Content Length: %s, Content Type: %s\n%!" content_length content_type;
+    printf "Content Length: %d, Content Type: %s\n%!" content_length content_type;
     let json = Basic.from_string json in
     if has_id json then
       let req = Request.t_of_yojson json in

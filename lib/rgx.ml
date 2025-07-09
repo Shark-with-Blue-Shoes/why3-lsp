@@ -29,7 +29,8 @@ let get_content_len str =
   try
     let rgx = Re.Perl.compile_pat "Content-Length: (\\d+)\\\\r\\\\n" in
       let mtch = Re.exec rgx str in
-        let content_len = Re.Group.get mtch 1 in content_len
+        let content_len_unsan = Re.Group.get mtch 1 in 
+        let content_len = (int_of_string content_len_unsan) in content_len
   with 
   | e -> raise (Rgx_failure (sprintf "Error in getting content length: %s\n" (Printexc.to_string e)));;
 
@@ -39,7 +40,7 @@ let get_content_typ str =
       let mtch = Re.exec rgx str in 
         let content_type = Re.Group.get mtch 1 in content_type
   with 
-  | e -> raise (Rgx_failure (sprintf "Error in getting content length: %s\n" (Printexc.to_string e)));;
+  | e -> raise (Rgx_failure (sprintf "Error in getting content type: %s\n" (Printexc.to_string e)));;
 
 let split_header str = 
   let content_len = get_content_len str in 
