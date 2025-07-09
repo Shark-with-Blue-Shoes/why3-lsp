@@ -226,7 +226,7 @@ module Response = struct
 end
 
 let assert_jsonrpc_version json =
-    let jsonrpc = get_req_mem json "version" |> to_string in
+    let jsonrpc = get_req_mem json "jsonrpc" |> to_string in
     if not (String.equal jsonrpc Constant.jsonrpcv)
     then
       raise (Yojson.Json_error ("invalid packet: jsonrpc version doesn't match " ^ jsonrpc))

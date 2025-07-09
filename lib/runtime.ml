@@ -15,9 +15,33 @@ let has_id json =
   | _ -> true
 
 
+let get_headers str = 
+  try 
+  let headers_rgx = "(.*)\\\\r\\\\n" in
+    let rgx = Re.Perl.compile_pat headers_rgx in 
+      let mtch = Re.exec rgx str in
+        let headers = Re.Group.get mtch 1 in headers
+  with
+    e -> printf "Error in getting headers: %s\n" (Printexc.to_string e); "I have nothing!";;
+
+let get_json str = 
+  try 
+    let json_rgx = "\\{.*\\}" in
+      let rgx = Re.Perl.compile_pat json_rgx in 
+        let mtch = Re.exec rgx str in 
+          let json = Re.Group.get mtch 0 in json
+  with 
+    e -> printf "Error in getting json: %s\n" (Printexc.to_string e); "I have nothing!";; 
+
+let sep_headers_and_json str = 
+    let json = get_json str in
+      let headers = get_headers str in
+              (headers, json);;
+
 let interp buf =
   try
-    let json = Basic.from_string buf in
+  let (_, json) = sep_headers_and_json buf in
+    let json = Basic.from_string json in
     if has_id json then
       let req = Request.t_of_yojson json in
       printf "{id: %s, method: %s, params: %s}\n%!" (Id.to_str req.id) req.method_ (Basic.to_string (Structured.yojson_of_t req.params))
