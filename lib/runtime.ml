@@ -9,7 +9,8 @@ let queue_mutex = Mutex.create ()
 let queue_condition = Condition.create ()
 let shutdown_flag = ref false (* A flag to signal consumer to stop *)
 
-let call_procedure = function
+let call_procedure method_ (*params *)=
+  match method_ with 
   | "initialize" -> Procedures.initialize ()
   | _ -> raise Procedures.Method_Not_Found;;
 
@@ -19,14 +20,16 @@ let interp buf =
     let (content_length, content_type) = split_header header_str in
     printf "Content Length: %d, Content Type: %s\n%!" content_length content_type;
     let json = Basic.from_string json in
+    (*If it has an id, it is a request*)
     if has_id json then
       let req = Request.t_of_yojson json in
-      Request.print req;
-      let _ = call_procedure req.method_ in ()
+        Request.print req;
+          let _ = call_procedure req.method_ (*req.params*) in ()
+    (*else, it is a notification*)
     else
       let not = Notification.t_of_yojson json in
-      Notification.print not;
-      let _ = call_procedure not.method_ in ()
+        Notification.print not;
+          let _ = call_procedure not.method_ (*not.params*) in ()
   with
     | Missing_Member err -> printf "Missing Member: %s\n\n%!" err
     | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n\n%!" x

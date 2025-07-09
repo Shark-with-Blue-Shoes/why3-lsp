@@ -88,10 +88,6 @@ module Request = struct
     ; params : Structured.t
     }
 
-  let print t = 
-      let (id_str, param_str) = (Id.to_str t.id, (Yojson.Basic.to_string (Structured.yojson_of_t t.params))) in
-      Printf.printf "{id: %s, method: %s, params: %s}\n%!" id_str t.method_ param_str;;
-
   let t_of_yojson json : t = 
     {
       id = get_req_mem json "id" |> Id.t_of_yojson;
@@ -101,6 +97,10 @@ module Request = struct
 
   let yojson_of_t t : Yojson.Basic.t =
     `Assoc ["id",  (Id.yojson_of_t t.id); "method" , (`String t.method_); "params", (Structured.yojson_of_t t.params)] 
+
+  let print t = 
+    Printf.printf "%s\n%!" (Yojson.Basic.to_string (yojson_of_t t));;
+
 end
 
 module Notification = struct 
@@ -109,10 +109,6 @@ module Notification = struct
     ; params : Structured.t
     }
   
-  let print t = 
-      let param_str = Yojson.Basic.to_string (Structured.yojson_of_t t.params) in
-      Printf.printf "{method: %s, params: %s}\n%!" t.method_ param_str;;
-
   let t_of_yojson json : t = 
     {
       method_ = get_req_mem json "method" |> to_string ;
@@ -122,6 +118,9 @@ module Notification = struct
   let yojson_of_t t : Yojson.Basic.t =
     `Assoc ["method" , (`String t.method_); "params", (Structured.yojson_of_t t.params)]
      
+  let print t = 
+    Printf.printf "%s\n%!" (Yojson.Basic.to_string (yojson_of_t t));;
+
 end
 
 module Response = struct
@@ -217,7 +216,8 @@ module Response = struct
   opt "error": _,
   }
   *)
-  
+ 
+  (*This is a pretty print function, which is prettier than the standard pprint_string (Yojson.Basic.to_string x)*)
   let print t =   
     let id_str = Id.to_str t.id in
     let res_str = match t.result with
