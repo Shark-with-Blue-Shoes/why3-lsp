@@ -40,7 +40,8 @@ let sep_headers_and_json str =
 
 let interp buf =
   try
-  let (_, json) = sep_headers_and_json buf in
+  let (header_str, json) = sep_headers_and_json buf in
+    printf "Headers: %s\n%!" header_str;
     let json = Basic.from_string json in
     if has_id json then
       let req = Request.t_of_yojson json in
