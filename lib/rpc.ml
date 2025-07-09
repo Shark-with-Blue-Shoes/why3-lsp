@@ -88,6 +88,10 @@ module Request = struct
     ; params : Structured.t
     }
 
+  let print t = 
+      let (id_str, param_str) = (Id.to_str t.id, (Yojson.Basic.to_string (Structured.yojson_of_t t.params))) in
+      Printf.printf "{id: %s, method: %s, params: %s}\n%!" id_str t.method_ param_str;;
+
   let t_of_yojson json : t = 
     {
       id = get_req_mem json "id" |> Id.t_of_yojson;
@@ -104,6 +108,10 @@ module Notification = struct
     { method_ : string
     ; params : Structured.t
     }
+  
+  let print t = 
+      let param_str = Yojson.Basic.to_string (Structured.yojson_of_t t.params) in
+      Printf.printf "{method: %s, params: %s}\n%!" t.method_ param_str;;
 
   let t_of_yojson json : t = 
     {
@@ -179,6 +187,7 @@ module Response = struct
      
           let yojson_of_t t = `Int (to_int t)
     end
+
     type t =
       { code : Code.t
       ; message : string
@@ -209,6 +218,18 @@ module Response = struct
   }
   *)
   
+  let print t =   
+    let id_str = Id.to_str t.id in
+    let res_str = match t.result with
+    | Ok js -> Yojson.Basic.to_string js
+    | Error err -> 
+      let code_str = Error.Code.to_int err.code in 
+      let data_str = Yojson.Basic.to_string err.data in 
+      Printf.sprintf "Error: {\n code: %d \n message: %s \n data: %s \n    }" code_str err.message data_str 
+        in
+    let str = Printf.sprintf "Response: {\n id: %s \n result: %s \n}\n\n\n" id_str res_str in 
+    print_string str;;
+
   let t_of_yojson json : t =
     let res = get_opt_mem json "result" in
     match res with
@@ -219,17 +240,18 @@ module Response = struct
     | _ -> {
       id = Id.t_of_yojson json;
       result = Ok res 
-    }
+    };;
 
-  let yojson_of_t t : Yojson.Basic.t = 
-    match t.result with
+    let yojson_of_t t : Yojson.Basic.t = 
+      match t.result with
       | Error x -> `Assoc ["id" , Id.yojson_of_t t.id; "error", Error.yojson_of_t x]
-      | Ok x -> `Assoc ["id" , Id.yojson_of_t t.id; "result", x]
+      | Ok x -> `Assoc ["id" , Id.yojson_of_t t.id; "result", x];;
 
-  let make ~id ~result = { id; result }
-  let ok id result = make ~id ~result:(Ok result)
-  let error id error = make ~id ~result:(Error error)
+    let make ~id ~result = { id; result };;
+    let ok id result = make ~id ~result:(Ok result);;
+    let error id error = make ~id ~result:(Error error);;
 end
+
 
 let assert_jsonrpc_version json =
     let jsonrpc = get_req_mem json "jsonrpc" |> to_string in

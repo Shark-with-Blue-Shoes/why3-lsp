@@ -9,6 +9,10 @@ let queue_mutex = Mutex.create ()
 let queue_condition = Condition.create ()
 let shutdown_flag = ref false (* A flag to signal consumer to stop *)
 
+let call_procedure = function
+  | "initialize" -> Procedures.initialize ()
+  | _ -> raise Procedures.Method_Not_Found;;
+
 let interp buf =
   try
   let (header_str, json) = split_header_json buf in
@@ -17,15 +21,18 @@ let interp buf =
     let json = Basic.from_string json in
     if has_id json then
       let req = Request.t_of_yojson json in
-      printf "{id: %s, method: %s, params: %s}\n\n%!" (Id.to_str req.id) req.method_ (Basic.to_string (Structured.yojson_of_t req.params))
+      Request.print req;
+      let _ = call_procedure req.method_ in ()
     else
-      let not = Notification.t_of_yojson json in 
-      printf "{method: %s, params: %s}\n\n%!" not.method_ (Basic.to_string (Structured.yojson_of_t not.params))
+      let not = Notification.t_of_yojson json in
+      Notification.print not;
+      let _ = call_procedure not.method_ in ()
   with
-    | Missing_Member err -> printf "Missing Member: %s\n%!" err
-    | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n%!" x
-    | Json_error err -> printf "Does not fulfill JSON RPC 2.0 protocol: %s\n%!" err
-    | Rgx_failure err -> printf "Rgx_failure: %s\n%!" err
+    | Missing_Member err -> printf "Missing Member: %s\n\n%!" err
+    | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n\n%!" x
+    | Json_error err -> printf "Does not fulfill JSON RPC 2.0 protocol: %s\n\n%!" err
+    | Rgx_failure err -> printf "Rgx_failure: %s\n\n%!" err
+    | Procedures.Method_Not_Found -> printf "Method that was called was not found, please check the method name\n\n%!"
     | _ as e -> printf "Strange error: %s\n%!" (Printexc.to_string e)
 
 (* Consumer thread function: Continuously pops messages from the queue and processes them *)
