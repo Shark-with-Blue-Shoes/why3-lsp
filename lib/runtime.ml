@@ -11,16 +11,13 @@ let shutdown_flag = ref false (* A flag to signal consumer to stop *)
 
 let call_procedure method_ (*params *)=
   let open Rpc.Response.Error.Code in
+  let open Yojson.Basic in
   match method_ with 
   | "initialize" -> Procedures.initialize ()
-  | _ -> let res : Response.t = {
-    id = `Int 7;
-    result = Error {
-      code = MethodNotFound; 
-      message = "Method was not found! Please check whether you have the right name!";  
-      data = Yojson.Basic.from_string "{}";
-                }
-    } in res;;
+  | _ -> 
+    Response.construct_response (`Int 7) 
+    (Error (Response.Error.construct_error MethodNotFound "Method called was not available" (from_string "{}")))
+;;
 
 let interp buf =
   try

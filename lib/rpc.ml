@@ -194,6 +194,13 @@ module Response = struct
       ; message : string
       ; data : Yojson.Basic.t
       }
+
+    let construct_error code msg _data : t = 
+      {
+        code = code;
+        message = msg;
+        data = _data
+      };;
    
     let yojson_of_t t : Yojson.Basic.t =
       `Assoc ["code" , (`Int (Code.to_int t.code)); "message", (`String t.message); "data", t.data]
@@ -207,42 +214,38 @@ module Response = struct
   end
 
   type t =
-    { id : Id.t
-    ; result : (Yojson.Basic.t, Error.t) Result.t
+    { id : Id.t;
+      result : (Yojson.Basic.t, Error.t) Result.t
     }
 
-  (*
-  JSON: {
-  "id": _,
-  opt "result": _,
-  opt "error": _,
-  }
-  *)
- 
+  let construct_response id (res : (Yojson.Basic.t, Error.t) Result.t) =
+    {
+      id = id;
+      result = res 
+    }
+
   (*This is a pretty print function, which is prettier than the standard pprint_string (Yojson.Basic.to_string x)*)
   let print t =   
     let id_str = Id.to_str t.id in
     let res_str = match t.result with
-    | Ok js -> Yojson.Basic.to_string js
+      (*If the result was Ok, print a json with that has result: ... *)
+    | Ok js -> let res_str = Yojson.Basic.to_string js in  
+    let str = Printf.sprintf "Response: {\n id: %s \n result: %s \n}\n\n\n" id_str res_str in str
+      (*If the result was an Error, print a json with that has error: ... *)
     | Error err -> 
       let code_str = Error.Code.to_int err.code in 
       let data_str = Yojson.Basic.to_string err.data in 
-      Printf.sprintf "Error: {\n code: %d \n message: %s \n data: %s \n    }" code_str err.message data_str 
+      let err_str = Printf.sprintf "Error: {\n code: %d \n message: %s \n data: %s \n   }" code_str err.message data_str in
+      let str = Printf.sprintf "Response: {\n id: %s \n error: %s \n}\n\n\n" id_str err_str in str
         in
-    let str = Printf.sprintf "Response: {\n id: %s \n result: %s \n}\n\n\n" id_str res_str in 
-    print_string str;;
+    print_string res_str;;
 
   let t_of_yojson json : t =
-    let res = get_opt_mem json "result" in
-    match res with
-    | `Null ->  {
-      id = Id.t_of_yojson json;
-      result = Error (get_req_mem json "error" |> Error.t_of_yojson) 
-    }
-    | _ -> {
-      id = Id.t_of_yojson json;
-      result = Ok res 
-    };;
+    let res_opt = get_opt_mem json "result" in
+      let res = match res_opt with
+    | `Null -> Error (get_req_mem json "error" |> Error.t_of_yojson)
+    | _ -> Ok res_opt in
+    construct_response (Id.t_of_yojson json) res;;
 
     let yojson_of_t t : Yojson.Basic.t = 
       match t.result with
