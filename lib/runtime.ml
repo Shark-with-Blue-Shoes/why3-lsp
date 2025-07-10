@@ -10,9 +10,17 @@ let queue_condition = Condition.create ()
 let shutdown_flag = ref false (* A flag to signal consumer to stop *)
 
 let call_procedure method_ (*params *)=
+  let open Rpc.Response.Error.Code in
   match method_ with 
   | "initialize" -> Procedures.initialize ()
-  | _ -> raise Procedures.Method_Not_Found;;
+  | _ -> let res : Response.t = {
+    id = `Int 7;
+    result = Error {
+      code = MethodNotFound; 
+      message = "Method was not found! Please check whether you have the right name!";  
+      data = Yojson.Basic.from_string "{}";
+                }
+    } in res;;
 
 let interp buf =
   try
@@ -24,12 +32,12 @@ let interp buf =
     if has_id json then
       let req = Request.t_of_yojson json in
         Request.print req;
-          let _ = call_procedure req.method_ (*req.params*) in ()
+      Response.print(call_procedure req.method_ (*req.params*));
     (*else, it is a notification*)
     else
       let not = Notification.t_of_yojson json in
         Notification.print not;
-          let _ = call_procedure not.method_ (*not.params*) in ()
+        Response.print(call_procedure not.method_ (*req.params*));
   with
     | Missing_Member err -> printf "Missing Member: %s\n\n%!" err
     | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n\n%!" x
