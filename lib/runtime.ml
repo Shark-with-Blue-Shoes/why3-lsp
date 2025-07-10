@@ -9,11 +9,11 @@ let queue_mutex = Mutex.create ()
 let queue_condition = Condition.create ()
 let shutdown_flag = ref false (* A flag to signal consumer to stop *)
 
-let call_procedure method_ (*params *)=
+let call_procedure method_ params =
   let open Rpc.Response.Error.Code in
   let open Yojson.Basic in
   match method_ with 
-  | "initialize" -> Procedures.initialize ()
+  | "initialize" -> Procedures.initialize params
   | _ -> 
     Response.construct_response (`Int 7) 
     (Error (Response.Error.construct_error MethodNotFound "Method called was not available" (from_string "{}")))
@@ -29,12 +29,12 @@ let interp buf =
     if has_id json then
       let req = Request.t_of_yojson json in
         Request.print req;
-      Response.print(call_procedure req.method_ (*req.params*));
+      Response.print(call_procedure req.method_ req.params);
     (*else, it is a notification*)
     else
       let not = Notification.t_of_yojson json in
         Notification.print not;
-        Response.print(call_procedure not.method_ (*req.params*));
+        Response.print(call_procedure not.method_ not.params);
   with
     | Missing_Member err -> printf "Missing Member: %s\n\n%!" err
     | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n\n%!" x
