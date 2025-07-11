@@ -5,9 +5,9 @@ open Yojson.Basic
 
 let initialized = ref false;;
 
-let initialize (json : Structured.t) : Response.t =
+let initialize (params : Structured.t) : Response.t =
   let open Rpc.Response.Error.Code in
-  match json with
+  match params with
   | `Null -> 
   if not !initialized then begin
     initialized := true;
