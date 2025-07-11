@@ -13,7 +13,7 @@ let call_procedure method_ params =
   let open Rpc.Response.Error.Code in
   let open Yojson.Basic in
   match method_ with 
-  | "initialize" -> Procedures.initialize params
+  | "initialize" -> Procedures.Initialize.initialize params
   | _ -> 
     Response.construct_response (`Int 7) 
     (Error (Response.Error.construct_error MethodNotFound "Method called was not available" (from_string "{}")))
