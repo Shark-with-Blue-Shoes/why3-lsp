@@ -58,7 +58,7 @@ module Id = struct
 
 end
 
-
+(*I must figure out how to make this more pure, perhaps I can define some structures (defined by lsp)*)
 module Structured = struct
   type t =
     [ `Assoc of (string * Yojson.Basic.t) list
