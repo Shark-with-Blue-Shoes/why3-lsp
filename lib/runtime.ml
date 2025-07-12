@@ -1,3 +1,5 @@
+exception Method_Not_Found
+
 open Yojson
 open Printf
 open Rpc_lib.Basic
@@ -10,10 +12,10 @@ let queue_condition = Condition.create ()
 let shutdown_flag = ref false (* A flag to signal consumer to stop *)
 
 let call_procedure method_ params =
-  let open Rpc_lib.Basic.Response.Error.Code in
+  let open Response.Error.Code in
   let open Yojson.Basic in
   match method_ with 
-  | "initialize" -> Procedures.Initialize.initialize params
+  | "initialize" -> Mlsp_lib.Funcs.initialize params
   | _ -> 
     Response.construct_response (`Int 7) 
     (Error (Response.Error.construct_error MethodNotFound "Method called was not available" (from_string "{}")))
@@ -40,7 +42,7 @@ let interp buf =
     | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n\n%!" x
     | Json_error err -> printf "Does not fulfill JSON RPC 2.0 protocol: %s\n\n%!" err
     | Rgx_failure err -> printf "Rgx_failure: %s\n\n%!" err
-    | Procedures.Method_Not_Found -> printf "Method that was called was not found, please check the method name\n\n%!"
+    | Method_Not_Found -> printf "Method that was called was not found, please check the method name\n\n%!"
     | _ as e -> printf "Strange error: %s\n%!" (Printexc.to_string e)
 
 (* Consumer thread function: Continuously pops messages from the queue and processes them *)
