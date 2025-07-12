@@ -1,4 +1,4 @@
 (library
  (name why3_lsp)
- (modules rgx rpc procedures runtime)
-  (libraries yojson threads re why3))
+ (modules rgx procedures runtime)
+  (libraries yojson threads re why3 rpc_lib))

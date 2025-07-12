@@ -1,6 +1,6 @@
 open Yojson
 open Printf
-open Rpc
+open Rpc_lib.Basic
 open Rgx
 
 (* Global message queue and synchronization primitives *)
@@ -10,7 +10,7 @@ let queue_condition = Condition.create ()
 let shutdown_flag = ref false (* A flag to signal consumer to stop *)
 
 let call_procedure method_ params =
-  let open Rpc.Response.Error.Code in
+  let open Rpc_lib.Basic.Response.Error.Code in
   let open Yojson.Basic in
   match method_ with 
   | "initialize" -> Procedures.Initialize.initialize params

@@ -1,6 +1,6 @@
 exception Method_Not_Found
 
-open Rpc
+open Rpc_lib.Basic
 open Yojson.Basic
 
 let initialized = ref false;;
@@ -20,7 +20,7 @@ module Initialize = struct
   };;
 
 let initialize (params : Structured.t) : Response.t =
-  let open Rpc.Response.Error.Code in
+  let open Response.Error.Code in
   match params with
   | `Null -> 
   if not !initialized then begin
