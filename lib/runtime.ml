@@ -11,13 +11,15 @@ let queue_mutex = Mutex.create ()
 let queue_condition = Condition.create ()
 let shutdown_flag = ref false (* A flag to signal consumer to stop *)
 
+let all_calls = StringMap.empty |> add_to_calls "initialize" Mlsp_lib.Funcs.initialize;;
+
 let call_procedure method_ params =
   let open Response.Error.Code in
   let open Yojson.Basic in
-  match method_ with 
-  | "initialize" -> Mlsp_lib.Funcs.initialize params
-  | _ -> 
-    Response.construct_response (`Int 7) 
+  try
+    (StringMap.find method_ all_calls) params
+  with
+    Not_found -> Response.construct_response (`Int 7) 
     (Error (Response.Error.construct_error MethodNotFound "Method called was not available" (from_string "{}")))
 ;;
 
