@@ -4,8 +4,7 @@ open Yojson
 open Printf
 open Rpc_lib.Basic
 open Rgx
-open Mlsp_lib.Funcs
-open Mlsp_lib.Types
+open Mlsp_lib.Lifecycle
 
 (* Global message queue and synchronization primitives *)
 let msg_queue = Queue.create ()
@@ -13,8 +12,7 @@ let queue_mutex = Mutex.create ()
 let queue_condition = Condition.create ()
 let shutdown_flag = ref false (* A flag to signal consumer to stop *)
 
-let all_calls = StringMap.empty |> add_to_calls "initialize" 
-(fun params -> let open Initialize in let s = Mlsp_lib.Types.Initialize.yojson_to_t params in initialize s.process_id);;
+let all_calls = StringMap.empty |> add_to_calls "initialize" Initialize.full_initialize
 
 let call_procedure method_ params =
   let open Yojson.Basic in
