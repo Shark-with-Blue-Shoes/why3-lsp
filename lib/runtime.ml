@@ -12,15 +12,27 @@ let queue_mutex = Mutex.create ()
 let queue_condition = Condition.create ()
 let shutdown_flag = ref false (* A flag to signal consumer to stop *)
 
-let all_calls = StringMap.empty |> add_to_calls "initialize" Initialize.full_initialize
+let all_request_calls = StringMap.empty |> add_to_calls "initialize" Initialize.full_initialize
 
-let call_procedure method_ params =
+let call_request method_ params =
   let open Yojson.Basic in
   try
-    (StringMap.find method_ all_calls) params
+    (StringMap.find method_ all_request_calls) params
   with
     Not_found -> Response.construct_response (`Int 7) 
-    (Error (Response.Error.construct_error MethodNotFound "Method called was not available" (from_string "{}")))
+    (Error (Response.Error.construct_error MethodNotFound "Request: Method called was not available" (from_string "{}")))
+;;
+
+let all_notifiation_calls = StringMap.empty
+
+let call_notification method_ params =
+  let open Yojson.Basic in
+  let _ = params in
+  try
+    (StringMap.find method_ all_notifiation_calls)
+  with
+    Not_found -> Response.construct_response (`Int 7) 
+    (Error (Response.Error.construct_error MethodNotFound "Notification: Method called was not available" (from_string "{}")))
 ;;
 
 let interp buf =
@@ -32,13 +44,13 @@ let interp buf =
     (*If it has an id, it is a request*)
     if has_id json then
       let req = Request.t_of_yojson json in
-        Request.print req;
-      Response.print(call_procedure req.method_ req.params);
+      Request.print req;
+      Response.print(call_request req.method_ req.params);
     (*else, it is a notification*)
     else
       let not = Notification.t_of_yojson json in
         Notification.print not;
-        Response.print(call_procedure not.method_ not.params);
+      Response.print(call_notification not.method_ not.params);
   with
     | Missing_Member err -> printf "Missing Member: %s\n\n%!" err
     | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n\n%!" x
