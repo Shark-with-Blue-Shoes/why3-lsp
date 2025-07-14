@@ -3,7 +3,6 @@ exception Method_Not_Found
 open Yojson
 open Printf
 open Rpc_lib.Basic
-open Rgx
 open Mlsp_lib.Lifecycle
 
 (* Global message queue and synchronization primitives *)
