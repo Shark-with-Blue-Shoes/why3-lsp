@@ -35,22 +35,21 @@ let call_notification method_ params =
     (Error (Response.Error.construct_error MethodNotFound "Notification: Method called was not available" (from_string "{}")))
 ;;
 
+let respond_to_batch = 
+  fun (call : Packet.call) -> 
+  match call with 
+    | `Notification not -> Response.print(call_notification not.method_ not.params)
+    | `Request req -> Response.print(call_request req.method_ req.params)
+
 let interp buf =
+  let _ = Yojson.Basic.from_string "[{\"jsonrpc\":\"2.0\", \"id\": 3, \"method\": \"initialize\", \"params\": {\"process_id\": 3}},{\"jsonrpc\":\"2.0\", \"id\": 4, \"method\": \"disconnect\"}]" in
   try
-  let (header_str, json) = split_header_json buf in
-    let (content_length, content_type) = split_header header_str in
-    printf "Content Length: %d, Content Type: %s\n%!" content_length content_type;
-    let json = Basic.from_string json in
-    (*If it has an id, it is a request*)
-    if has_id json then
-      let req = Request.t_of_yojson json in
-      Request.print req;
-      Response.print(call_request req.method_ req.params);
-    (*else, it is a notification*)
-    else
-      let not = Notification.t_of_yojson json in
-        Notification.print not;
-      Response.print(call_notification not.method_ not.params);
+    let packet = Packet.t_of_str buf in
+    match packet.body with 
+    | Notification not -> Response.print(call_notification not.method_ not.params);
+    | Request req -> Response.print(call_request req.method_ req.params);
+    | Batch_call ls -> List.iter respond_to_batch ls
+    | _ -> raise (Json_error "issue")
   with
     | Missing_Member err -> printf "Missing Member: %s\n\n%!" err
     | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n\n%!" x
