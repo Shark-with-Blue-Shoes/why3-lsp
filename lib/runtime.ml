@@ -1,5 +1,3 @@
-exception Method_Not_Found
-
 open Yojson
 open Printf
 open Rpc_lib.Basic
@@ -11,7 +9,7 @@ let queue_mutex = Mutex.create ()
 let queue_condition = Condition.create ()
 let shutdown_flag = ref false (* A flag to signal consumer to stop *)
 
-let all_request_calls = StringMap.empty |> add_to_calls "initialize" Initialize.full_initialize
+let all_request_calls = StringMap.empty |> add_to_calls "initialize" Initialize.respond
 
 let call_request method_ params =
   let open Yojson.Basic in
@@ -19,7 +17,7 @@ let call_request method_ params =
     (StringMap.find method_ all_request_calls) params
   with
     Not_found -> Response.construct_response (`Int 7) 
-    (Error (Response.Error.construct_error MethodNotFound "Request: Method called was not available" (from_string "{}")))
+    (Error (Response.Error.construct_error MethodNotFound "Request: Method called was not available" (from_string "{}"))) |> Response.yojson_of_t 
 ;;
 
 let all_notifiation_calls = StringMap.empty
@@ -31,30 +29,27 @@ let call_notification method_ params =
     (StringMap.find method_ all_notifiation_calls)
   with
     Not_found -> Response.construct_response (`Int 7) 
-    (Error (Response.Error.construct_error MethodNotFound "Notification: Method called was not available" (from_string "{}")))
+    (Error (Response.Error.construct_error MethodNotFound "Notification: Method called was not available" (from_string "{}"))) |> Response.yojson_of_t 
 ;;
 
 let respond_to_batch = 
   fun (call : Packet.call) -> 
   match call with 
-    | `Notification not -> Response.print(call_notification not.method_ not.params)
-    | `Request req -> Response.print(call_request req.method_ req.params)
+    | `Notification not -> (call_notification not.method_ not.params) |> Yojson.Basic.pretty_print Format.std_formatter
+    | `Request req -> (call_request req.method_ req.params) |> Yojson.Basic.pretty_print Format.std_formatter 
 
 let interp buf =
-  let _ = Yojson.Basic.from_string "[{\"jsonrpc\":\"2.0\", \"id\": 3, \"method\": \"initialize\", \"params\": {\"process_id\": 3}},{\"jsonrpc\":\"2.0\", \"id\": 4, \"method\": \"disconnect\"}]" in
   try
     let packet = Packet.t_of_str buf in
     match packet.body with 
-    | Notification not -> Response.print(call_notification not.method_ not.params);
-    | Request req -> Response.print(call_request req.method_ req.params);
+    | Notification not -> (call_notification not.method_ not.params) |> Yojson.Basic.pretty_print Format.std_formatter;
+    | Request req -> (call_request req.method_ req.params) |> Yojson.Basic.pretty_print Format.std_formatter;
     | Batch_call ls -> List.iter respond_to_batch ls
     | _ -> raise (Json_error "issue")
   with
     | Missing_Member err -> printf "Missing Member: %s\n\n%!" err
     | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n\n%!" x
     | Json_error err -> printf "Does not fulfill JSON RPC 2.0 protocol: %s\n\n%!" err
-    | Rgx_failure err -> printf "Rgx_failure: %s\n\n%!" err
-    | Method_Not_Found -> printf "Method that was called was not found, please check the method name\n\n%!"
     | _ as e -> printf "Strange error: %s\n%!" (Printexc.to_string e)
 
 (* Consumer thread function: Continuously pops messages from the queue and processes them *)
