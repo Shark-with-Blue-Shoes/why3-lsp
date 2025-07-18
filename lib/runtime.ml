@@ -11,10 +11,12 @@ let shutdown_flag = ref false (* A flag to signal consumer to stop *)
 
 let all_request_calls = StringMap.empty |> add_to_calls "initialize" Initialize.respond
 
-let call_request method_ params =
+let call_request (req : Request.t) =
   let open Yojson.Basic in
   try
-    (StringMap.find method_ all_request_calls) params
+    match req.params with
+    | Some params -> (StringMap.find req.method_ all_request_calls) params
+    | None -> (StringMap.find req.method_ all_request_calls) `Null
   with
     Not_found -> Response.construct_response (`Int 7) 
     (Error (Response.Error.construct_error MethodNotFound "Request: Method called was not available" (from_string "{}"))) |> Response.yojson_of_t 
@@ -22,11 +24,13 @@ let call_request method_ params =
 
 let all_notifiation_calls = StringMap.empty
 
-let call_notification method_ params =
+let call_notification (not : Notification.t) =
   let open Yojson.Basic in
-  let _ = params in
+  let _ = not.params in
   try
-    (StringMap.find method_ all_notifiation_calls)
+    match not.params with
+    | Some params -> (StringMap.find not.method_ all_request_calls) params
+    | None -> (StringMap.find not.method_ all_request_calls) `Null
   with
     Not_found -> Response.construct_response (`Int 7) 
     (Error (Response.Error.construct_error MethodNotFound "Notification: Method called was not available" (from_string "{}"))) |> Response.yojson_of_t 
@@ -35,15 +39,15 @@ let call_notification method_ params =
 let respond_to_batch = 
   fun (call : Packet.call) -> 
   match call with 
-    | `Notification not -> (call_notification not.method_ not.params) |> Yojson.Basic.pretty_print Format.std_formatter
-    | `Request req -> (call_request req.method_ req.params) |> Yojson.Basic.pretty_print Format.std_formatter 
+    | `Notification not -> (call_notification not) |> Yojson.Basic.pretty_print Format.std_formatter
+    | `Request req -> (call_request req) |> Yojson.Basic.pretty_print Format.std_formatter 
 
 let interp buf =
   try
     let packet = Packet.t_of_str buf in
     match packet.body with 
-    | Notification not -> (call_notification not.method_ not.params) |> Yojson.Basic.pretty_print Format.std_formatter;
-    | Request req -> (call_request req.method_ req.params) |> Yojson.Basic.pretty_print Format.std_formatter;
+    | Notification not -> (call_notification not) |> Yojson.Basic.pretty_print Format.std_formatter;
+    | Request req -> (call_request req) |> Yojson.Basic.pretty_print Format.std_formatter;
     | Batch_call ls -> List.iter respond_to_batch ls
     | _ -> raise (Json_error "issue")
   with

@@ -1,4 +1,5 @@
 dune exec bin/main.exe <<EOF
+Content-Length: 6\r\n Content-Type: "json-RPC"\r\n\r\n {"jsonrpc":"2.0", "id": 2, "method": "hello"}
 Content-Length: 3\r\n Content-Type: "json-RPC"\r\n\r\n {"jsonrpc":"2.0", "method": "hello"}
 Content-Length: 6\r\n Content-Type: "json-RPC"\r\n\r\n {"jsonrpc":"2.0", "id": 2, "method": "initialize", "params": {"process_id": 3}}
 Content-Length: 9\r\n Content-Type: "json-RPC"\r\n\r\n {"jsonrpc":"2.0", "method": "ping"}
