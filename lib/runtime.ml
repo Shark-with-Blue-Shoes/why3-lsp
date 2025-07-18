@@ -2,6 +2,7 @@ open Yojson
 open Printf
 open Rpc_lib.Basic
 open Mlsp_lib.Lifecycle
+open Response.Error
 
 (* Global message queue and synchronization primitives *)
 let msg_queue = Queue.create ()
@@ -18,22 +19,21 @@ let call_request (req : Request.t) =
     | Some params -> (StringMap.find req.method_ all_request_calls) params
     | None -> (StringMap.find req.method_ all_request_calls) `Null
   with
-    Not_found -> Response.construct_response (`Int 7) 
-    (Error (Response.Error.construct_error MethodNotFound "Request: Method called was not available" (from_string "{}"))) |> Response.yojson_of_t 
+    Not_found -> from_string "{}" |> construct_error Code.ServerNotInitialized "Server was already initialized bozo" |>
+          Response.construct_response (`Int 10) |> Response.yojson_of_t 
 ;;
 
 let all_notifiation_calls = StringMap.empty
 
 let call_notification (not : Notification.t) =
   let open Yojson.Basic in
-  let _ = not.params in
   try
     match not.params with
     | Some params -> (StringMap.find not.method_ all_request_calls) params
     | None -> (StringMap.find not.method_ all_request_calls) `Null
   with
-    Not_found -> Response.construct_response (`Int 7) 
-    (Error (Response.Error.construct_error MethodNotFound "Notification: Method called was not available" (from_string "{}"))) |> Response.yojson_of_t 
+    Not_found -> from_string "{}" |> construct_error Code.ServerNotInitialized "Server was already initialized bozo" |>
+          Response.construct_response (`Int 10) |> Response.yojson_of_t 
 ;;
 
 let respond_to_batch = 
