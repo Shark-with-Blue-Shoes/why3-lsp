@@ -1,4 +1,4 @@
 (library
  (name why3_lsp)
- (modules runtime)
+ (modules runtime server scheduler)
   (libraries yojson threads re why3 rpc_lib mlsp_lib))
