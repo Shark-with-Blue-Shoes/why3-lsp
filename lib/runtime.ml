@@ -5,10 +5,11 @@ open Mlsp_lib.Lifecycle
 open Response.Error
 
 (* Global message queue and synchronization primitives *)
-let msg_queue = Queue.create ()
+(*let msg_queue = Queue.create ()
 let queue_mutex = Mutex.create ()
 let queue_condition = Condition.create ()
 let shutdown_flag = ref false (* A flag to signal consumer to stop *)
+*)
 
 let all_request_calls = StringMap.empty |> add_to_calls "initialize" Initialize.respond
 
@@ -42,7 +43,8 @@ let respond_to_batch =
     | `Notification not -> (call_notification not) |> Yojson.Basic.pretty_print Format.std_formatter
     | `Request req -> (call_request req) |> Yojson.Basic.pretty_print Format.std_formatter 
 
-let interp buf =
+let interp fmt buf =
+  let _ = fmt in
   try
     let packet = Packet.t_of_str buf in
     match packet.body with 
@@ -55,9 +57,10 @@ let interp buf =
     | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n\n%!" x
     | Json_error err -> printf "Does not fulfill JSON RPC 2.0 protocol: %s\n\n%!" err
     | _ as e -> printf "Strange error: %s\n%!" (Printexc.to_string e)
+  ;;
 
 (* Consumer thread function: Continuously pops messages from the queue and processes them *)
-let consumer_thread_func () =
+(*let consumer_thread_func () =
   try
     while not !shutdown_flag || not (Queue.is_empty msg_queue) do
       let msg =
@@ -105,4 +108,4 @@ let rec server_producer () =
       shutdown_flag := true; (* Set shutdown flag *)
       Condition.signal queue_condition; (* Signal consumer one last time *)
       Mutex.unlock queue_mutex;
-      () (* Exit the producer loop *)
+      () (* Exit the producer loop *)*)

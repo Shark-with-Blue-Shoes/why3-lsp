@@ -1,4 +1,7 @@
 open Why3.Itp_communication
+open Why3
+open Scheduler
+open Printf
 
 
 module Lsp_Protocol = struct
@@ -30,3 +33,12 @@ end
 let get_notified = Lsp_Protocol.get_notified
 
 let send_request = Lsp_Protocol.send_request
+
+module Server = Itp_server.Make (Unix_scheduler) (Lsp_Protocol)
+
+
+let treat_notification fmt n =
+  let _ = fmt in
+  match n with
+  | Reset_whole_tree                        -> printf "skibidi" 
+  | _ -> printf "hello"
