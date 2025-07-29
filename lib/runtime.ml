@@ -1,7 +1,7 @@
 open Yojson
 open Printf
 open Rpc_lib.Basic
-open Lifecycle
+open Lsp.Initialize
 open Response.Error
 
 let all_request_calls = StringMap.empty |> add_to_calls "initialize" Initialize.respond
