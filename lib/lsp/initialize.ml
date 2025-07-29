@@ -20,8 +20,7 @@ let spec : Getopt.opt list =
 
 (* --help *)
 let usage_str =
-  "[<file.xml>|<f1.why> <f2.mlw> ...]\n\
-   Launch a command-line interface for Why3."
+  "Launch an LSP for Why3."
 
 let (config : Whyconf.config), (env : Env.env) =
   Whyconf.Args.initialize spec (fun f -> Queue.add f files) usage_str
