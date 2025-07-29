@@ -1,9 +1,14 @@
 open Yojson.Basic.Util
 open Yojson.Basic
 open Rpc_lib.Basic
+open Why3
+open Printf
+open Server
 
 
-(* files of the current task 
+(*files of the current task *)
+
+module Why_Server = struct
 let files = Queue.create ()
 
 let quiet = ref false
@@ -37,7 +42,8 @@ let init_server () =
       let f = Sysutil.concat (Sys.getcwd ()) f in
       send_request (Add_file_req f))
     files;
-  Server.init_server config env dir;;*)
+  Server.init_server config env dir;;
+end
 
 
 type uri = string;;
@@ -402,6 +408,7 @@ let json_to_root_uri : t -> [`Null | `DocUri of string] = function
       try
         assert (!initialized = false);
         initialized := true; 
+        Why_Server.init_server ();
         match process_id with
         | `Null -> Ok {capabilities = {experimental = Some Null}; serverInfo = None}
         | `Int _ -> Ok {capabilities = {experimental = Some Null}; serverInfo = None}

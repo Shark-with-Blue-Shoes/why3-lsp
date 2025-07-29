@@ -13,7 +13,7 @@ let call_request (req : Request.t) =
     | Some params -> (StringMap.find req.method_ all_request_calls) params
     | None -> (StringMap.find req.method_ all_request_calls) `Null
   with
-    Not_found -> from_string "{}" |> construct_error Code.ServerNotInitialized "Server was already initialized bozo" |>
+    Not_found -> from_string "{}" |> construct_error Code.MethodNotFound "Method was not found bozo" |>
           Response.construct_response (`Int 10) |> Response.yojson_of_t 
 ;;
 
@@ -26,7 +26,7 @@ let call_notification (not : Notification.t) =
     | Some params -> (StringMap.find not.method_ all_request_calls) params
     | None -> (StringMap.find not.method_ all_request_calls) `Null
   with
-    Not_found -> from_string "{}" |> construct_error Code.ServerNotInitialized "Server was already initialized bozo" |>
+    Not_found -> from_string "{}" |> construct_error Code.MethodNotFound "Method was not found bozo" |>
           Response.construct_response (`Int 10) |> Response.yojson_of_t 
 ;;
 
