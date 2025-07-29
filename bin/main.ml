@@ -7,7 +7,7 @@ open Why3_lsp.Runtime
 
 let () =
   let fmt = std_formatter in
-  printf "LSP Server (simplified) starting. Type messages and press Enter. Ctrl+D to exit.\n%!";
+  printf "LSP Server has begun!\n%!";
   Unix_scheduler.timeout ~ms:100
       (*a function that iterates over a list of notifications, applying treat_notification, returns true*) 
     (fun () -> List.iter
