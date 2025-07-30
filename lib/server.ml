@@ -40,5 +40,5 @@ module Server = Itp_server.Make (Unix_scheduler) (Lsp_Protocol)
 let treat_notification fmt n =
   let _ = fmt in
   match n with
-  | Reset_whole_tree                        -> printf "skibidi" 
-  | _ -> printf "hello"
+  | Reset_whole_tree                        -> printf "Reset whole tree\n%!" 
+  | _ -> printf "What the hell are you doing!\n%!"
