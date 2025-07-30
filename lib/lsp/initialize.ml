@@ -253,7 +253,7 @@ module Initialize = struct
       clientInfo: client_info option;
       locale: string option;
       rootPath: [`Null | `String of string] option;
-      rootUri: [`Null | `DocUri of string] ;
+      rootUri: uri;
       initializationOptions: lspAny option;
       clientCapabilities: clientCapabilities;
       trace: [`Off | `Messages | `Verbose] option;
@@ -287,9 +287,8 @@ let json_to_p_id : t -> [`Null | `Int of int] = function
     | None -> None
     | Some cli_Info -> Some (json_to_root_path cli_Info);;
   
-let json_to_root_uri : t -> [`Null | `DocUri of string] = function
-  | `Null -> `Null        (* If input JSON is `Null`, return the `Null` polymorphic variant tag. *)
-  | `String s -> `DocUri s (* If input JSON is `String` carrying `s`, return the `DocUri` tag with `s`. *)
+let json_to_root_uri : t -> uri = function
+  | `String s -> s 
   | json -> raise (Type_error ("rootUri is of wrong type", json));;
  
 
@@ -402,10 +401,11 @@ let json_to_root_uri : t -> [`Null | `DocUri of string] = function
 
     open Resp
     
-    let initialize process_id : response =
+    let initialize process_id uri : response =
       try
         assert (!initialized = false);
         initialized := true; 
+        Queue.add uri Why_Server.files;
         Why_Server.init_server ();
         match process_id with
         | `Null -> Ok {capabilities = {experimental = Some Null}; serverInfo = None}
@@ -425,7 +425,7 @@ let json_to_root_uri : t -> [`Null | `DocUri of string] = function
     try
         let id = Id.t_of_yojson (`Int 7) in
         let fields = request_of_yojson params in 
-          initialize fields.processId |> choose_between id 
+          initialize fields.processId fields.rootUri |> choose_between id 
     with
     | Missing_Member str -> yojson_of_error {retry = false} |> 
       construct_error Code.InvalidRequest str |>
