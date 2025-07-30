@@ -49,6 +49,7 @@ let interp fmt buf =
     | Missing_Member err -> printf "Missing Member: %s\n\n%!" err
     | Yojson__Basic.Util.Type_error (x, _) -> printf "Type error: %s\n\n%!" x
     | Json_error err -> printf "Does not fulfill JSON RPC 2.0 protocol: %s\n\n%!" err
+    | Rpc_lib.Rgx.Rgx_failure err -> printf "Regex error: %s\n\n%!" err
     | _ as e -> printf "Strange error: %s\n%!" (Printexc.to_string e)
   ;;
 
