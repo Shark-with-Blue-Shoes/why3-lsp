@@ -43,8 +43,8 @@ let interp fmt buf =
     match packet.body with 
     | Notification not -> (call_notification not) |> Yojson.Basic.pretty_print Format.std_formatter;
     | Request req -> (call_request req) |> Yojson.Basic.pretty_print Format.std_formatter;
-    | Batch_call ls -> List.iter respond_to_batch ls
-    | _ -> raise (Json_error "issue")
+    | Batch_call ls -> List.iter respond_to_batch ls;
+    | _ -> raise (Json_error "issue");
   with
     | Missing_Member err -> printf "Missing Member: %s\n\n%!" err
     | Yojson__Basic.Util.Type_error (x, y) -> printf " %s experienced a Type error of: %s\n\n%!" (Basic.to_string y) x 
