@@ -1,49 +1,6 @@
 open Yojson.Basic.Util
 open Yojson.Basic
 open Rpc_lib.Basic
-open Why3
-open Printf
-open Server
-
-
-(*files of the current task *)
-
-module Why_Server = struct
-let files = Queue.create ()
-
-let quiet = ref false
-
-let spec : Getopt.opt list =
-  let open Getopt in
-  [KLong "quiet", Hnd0 (fun () -> quiet := true),
-   " remove all printing to stdout"]
-
-(* --help *)
-let usage_str =
-  "Launch an LSP for Why3."
-
-let (config : Whyconf.config), (env : Env.env) =
-  Whyconf.Args.initialize spec (fun f -> Queue.add f files) usage_str
-
-let init_server () =
-  if Queue.is_empty files then
-    Whyconf.Args.exit_with_usage usage_str;
-  let dir =
-    try
-      Server_utils.get_session_dir ~allow_mkdir:true files
-    with Invalid_argument s ->
-      eprintf "Error: %s@." s;
-      Whyconf.Args.exit_with_usage usage_str
-  in
-  Queue.iter
-    (fun f ->
-      (* Sanitize the command line arguments so that they are always absolute *)
-      let f = Sysutil.concat (Sys.getcwd ()) f in
-      send_request (Add_file_req f))
-    files;
-  Server.init_server config env dir;;
-end
-
 
 type uri = string;;
 
@@ -402,11 +359,10 @@ let json_to_root_uri : t -> uri = function
     open Resp
     
     let initialize process_id uri : response =
+      let _ = uri in
       try
         assert (!initialized = false);
         initialized := true; 
-        Queue.add uri Why_Server.files;
-        Why_Server.init_server ();
         match process_id with
         | `Null -> Ok {capabilities = {experimental = Some Null}; serverInfo = None}
         | `Int _ -> Ok {capabilities = {experimental = Some Null}; serverInfo = None}
