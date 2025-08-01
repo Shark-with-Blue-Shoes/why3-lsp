@@ -37,12 +37,11 @@ let respond_to_batch =
     | `Notification not -> (call_notification not) |> Yojson.Basic.pretty_print Format.std_formatter
     | `Request req -> (call_request req) |> Yojson.Basic.pretty_print Format.std_formatter 
 
-let interp fmt buf =
-  let _ = fmt in
+let interp buf =
   try
     let packet = Packet.t_of_str buf in
     match packet.body with 
-    | Notification not -> notify not;
+    | Notification not -> send_notif not;
     | Request req -> send_request req;
     | Batch_call ls -> List.iter respond_to_batch ls;
     | _ -> raise (Json_error "issue");

@@ -16,7 +16,7 @@ module Lsp_Protocol = struct
 
   let notification_list: Notification.t list ref = ref []
 
-  let notify n =
+  let send_notif n =
     notification_list := n :: !notification_list
 
   let get_notified () : Notification.t list =

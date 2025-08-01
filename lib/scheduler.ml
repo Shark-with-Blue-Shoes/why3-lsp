@@ -56,7 +56,7 @@ module Unix_scheduler = struct
      (* [main_loop interp] starts the scheduler. On idle, standard input is
         read.  When a complete line is read from stdin, it is passed
         as a string to the function [interp] *)
-     let main_loop ?prompt interp =
+     let main_loop ?prompt (interp : string -> unit) =
        begin match prompt with
        | None -> ()
        | Some s -> prompt_string := s
