@@ -4,7 +4,6 @@ open Yojson.Basic
 
 open Why3_lsp.Scheduler
 open Why3_lsp.Runtime
-open Why3_lsp.Server.Lsp_Protocol
 
 let () =
   printf "LSP Server has begun!\n%!";
