@@ -3,6 +3,7 @@ open Printf
 open Rpc_lib.Basic
 open Lsp.Initialize
 open Response.Error
+open Server.Lsp_Protocol
 
 let all_request_calls = StringMap.empty |> add_to_calls "initialize" Initialize.respond
 
@@ -41,8 +42,8 @@ let interp fmt buf =
   try
     let packet = Packet.t_of_str buf in
     match packet.body with 
-    | Notification not -> (call_notification not) |> Yojson.Basic.pretty_print Format.std_formatter;
-    | Request req -> (call_request req) |> Yojson.Basic.pretty_print Format.std_formatter;
+    | Notification not -> notify not;
+    | Request req -> send_request req;
     | Batch_call ls -> List.iter respond_to_batch ls;
     | _ -> raise (Json_error "issue");
   with

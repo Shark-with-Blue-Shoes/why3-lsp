@@ -66,7 +66,7 @@ module Unix_scheduler = struct
            if !print_prompt then begin
              prompt_delay := !prompt_delay + 1;
              if !prompt_string <> "" && !prompt_delay = 1 then begin
-               Format.printf "%s@?" !prompt_string;
+               Format.eprintf "%s@?" !prompt_string;
                prompt_delay := 0;
                print_prompt := false;
              end
