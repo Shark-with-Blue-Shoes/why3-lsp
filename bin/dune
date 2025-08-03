@@ -2,5 +2,4 @@
  (public_name why3_lsp)
  (name main)
  (libraries why3_lsp yojson threads)
- (preprocess (pps lwt_ppx))
  )

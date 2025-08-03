@@ -416,9 +416,13 @@ let json_to_root_uri : t -> uri = function
     let choose_between id resp = 
       let open Rpc_lib.Basic.Response in
       match resp with
-      | Ok res -> yojson_of_result res |> (fun res -> Ok res) |> construct_response id |> Response.yojson_of_t
-      | Error err -> yojson_of_error err |> Error.construct_error Error.Code.ServerNotInitialized "Server was already initialized bozo" |>
-          Response.construct_response id |> Response.yojson_of_t;;
+      | Ok res -> yojson_of_result res |>
+      (fun res -> Ok res) |> construct_response id |>
+      Response.yojson_of_t
+      | Error err -> yojson_of_error err |> 
+      Error.construct_error Error.Code.ServerNotInitialized "Server was already initialized bozo" |>
+      (fun err -> Error err) |>
+      Response.construct_response id |> Response.yojson_of_t;;
 
     let respond params : Yojson.Basic.t =
       let open Rpc_lib.Basic.Response.Error in
@@ -429,9 +433,12 @@ let json_to_root_uri : t -> uri = function
     with
     | Missing_Member str -> yojson_of_error {retry = false} |> 
       construct_error Code.InvalidRequest str |>
-          Response.construct_response (`Int 0) |> Response.yojson_of_t
+      (fun err -> Error err) |>
+      Response.construct_response (`Int 0) |> 
+      Response.yojson_of_t
     | str ->  yojson_of_error {retry = false} |> 
       construct_error Code.InternalError (Printexc.to_string str) |>
-          Response.construct_response (`Int 0) |> Response.yojson_of_t
+      (fun err -> Error err) |>
+      Response.construct_response (`Int 0) |> Response.yojson_of_t
 
 end

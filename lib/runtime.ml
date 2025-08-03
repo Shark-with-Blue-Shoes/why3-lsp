@@ -4,7 +4,7 @@ open Rpc_lib.Basic
 open Lsp.Initialize
 open Response.Error
 
-let all_request_calls = StringMap.empty |> add_to_calls "initialize" Initialize.respond
+let all_request_calls = StringMap.empty |> add_to_requests "initialize" Initialize.respond
 
 let call_request (req : Request.t) =
   let open Yojson.Basic in
@@ -13,8 +13,10 @@ let call_request (req : Request.t) =
     | Some params -> (StringMap.find req.method_ all_request_calls) params
     | None -> (StringMap.find req.method_ all_request_calls) `Null
   with
-    Not_found -> from_string "{}" |> construct_error Code.MethodNotFound "Method was not found bozo" |>
-          Response.construct_response (`Int 10) |> Response.yojson_of_t 
+    Not_found -> from_string "{}" |> 
+    construct_error Code.MethodNotFound "Method was not found bozo" |>
+    (fun err -> Error err) |>
+    Response.construct_response (`Int 10) |> Response.yojson_of_t 
 ;;
 
 let all_notifiation_calls = StringMap.empty
@@ -26,8 +28,10 @@ let call_notification (not : Notification.t) =
     | Some params -> (StringMap.find not.method_ all_request_calls) params
     | None -> (StringMap.find not.method_ all_request_calls) `Null
   with
-    Not_found -> from_string "{}" |> construct_error Code.MethodNotFound "Method was not found bozo" |>
-          Response.construct_response (`Int 10) |> Response.yojson_of_t 
+    Not_found -> from_string "{}" |> 
+    construct_error Code.MethodNotFound "Method was not found bozo" |>
+    (fun err -> Error err) |>
+    Response.construct_response (`Int 10) |> Response.yojson_of_t 
 ;;
 
 let respond_to_batch = 
