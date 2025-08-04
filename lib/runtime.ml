@@ -28,7 +28,7 @@ let get_notified () : Notification.t list =
     l else [];;
 
 (*These manage the procedure calls for the requests/notifs*)
-let all_request_calls = StringMap.empty |> add_to_calls "initialize" Initialize.respond
+let all_request_calls = StringMap.empty |> add_to_requests "initialize" Initialize.respond
 
 let call_request (req : Request.t) =
   let open Yojson.Basic in
@@ -41,25 +41,22 @@ let call_request (req : Request.t) =
           Response.construct_response (`Int 10) |> Response.yojson_of_t 
 ;;
 
-let all_notifiation_calls = StringMap.empty
+let all_notification_calls = StringMap.empty
 
 let call_notification (not : Notification.t) =
-  let open Yojson.Basic in
   try
     match not.params with
-    | Some params -> (StringMap.find not.method_ all_request_calls) params
-    | None -> (StringMap.find not.method_ all_request_calls) `Null
+    | Some args -> (StringMap.find not.method_ all_notification_calls) args
+    | None -> (StringMap.find not.method_ all_notification_calls) `Null
   with
-    Not_found -> from_string "{}" |> construct_error Code.MethodNotFound "Method was not found bozo" |>
-          Response.construct_response (`Int 10) |> Response.yojson_of_t 
-;;
+    Not_found -> ();;
 
 let respond_to_batch = 
   fun (call : Packet.call) -> 
   match call with 
-    | `Notification not -> (call_notification not) |> Yojson.Basic.pretty_print Format.std_formatter
-    | `Request req -> (call_request req) |> Yojson.Basic.pretty_print Format.std_formatter 
-
+    | `Notification not -> send_notif not
+    | `Request req -> send_request req
+    
 let interp buf =
   try
     let packet = Packet.t_of_str buf in

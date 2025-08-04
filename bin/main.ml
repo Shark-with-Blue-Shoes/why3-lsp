@@ -10,7 +10,7 @@ let () =
   Unix_scheduler.timeout ~ms:100
       (*a function that iterates over a list of notifications, applying call_notification, returns true*) 
     (fun () -> List.iter
-        (fun n -> call_notification n |> pretty_to_channel stdout) (get_notified ()); 
+        (fun n -> call_notification n) (get_notified ()); 
         true);
   Unix_scheduler.timeout ~ms:100
       (*a function that iterates over a list of requests, applying call_request, returns true*) 
