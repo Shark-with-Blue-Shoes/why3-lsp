@@ -4,29 +4,6 @@ open Rpc_lib.Basic
 open Lsp.Initialize
 open Response.Error
 
-(*This manages the requests/notifs*)
-let list_requests: Request.t list ref = ref []
-
-let get_requests () : Request.t list =
-  if List.length !list_requests > 0 then
-  let l = List.rev !list_requests in
-  list_requests := [];
-    l else [];;
-
-let send_request r =
-  list_requests := r :: !list_requests
-
-let notification_list: Notification.t list ref = ref []
-
-let send_notif n =
-  notification_list := n :: !notification_list
-
-let get_notified () : Notification.t list =
-  if List.length !notification_list > 0 then
-  let l = List.rev !notification_list in
-  notification_list := [];
-    l else [];;
-
 (*These manage the procedure calls for the requests/notifs*)
 let all_request_calls = StringMap.empty |> add_to_requests "initialize" Initialize.respond
 
@@ -54,15 +31,15 @@ let call_notification (not : Notification.t) =
 let respond_to_batch = 
   fun (call : Packet.call) -> 
   match call with 
-    | `Notification not -> send_notif not
-    | `Request req -> send_request req
+    | `Notification not -> call_notification not
+    | `Request req -> call_request req |> Basic.pretty_to_channel stdout
     
 let interp buf =
   try
     let packet = Packet.t_of_str buf in
     match packet.body with 
-    | Notification not -> send_notif not;
-    | Request req -> send_request req;
+    | Notification not -> call_notification not;
+    | Request req -> call_request req |> Basic.pretty_to_channel stdout;
     | Batch_call ls -> List.iter respond_to_batch ls;
     | _ -> raise (Json_error "issue");
   with

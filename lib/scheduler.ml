@@ -98,7 +98,7 @@ module Unix_scheduler = struct
                    (* or the time left until the next timeout otherwise *)
                  in
                  let a,_,_ = Unix.select
-                               (if !prompt_string <> "" then [Unix.stdin] else []) [] [] delay in
+                               (if !prompt_string <> "" then [Unix.stderr] else []) [] [] delay in
                  match a with
                  | [_] ->
                     let n = Unix.read Unix.stdin buf 0 256 in

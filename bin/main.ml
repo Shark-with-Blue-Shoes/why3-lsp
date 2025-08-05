@@ -1,21 +1,14 @@
-open Printf
-open Out_channel
-open Yojson.Basic
-
-open Why3_lsp.Scheduler
 open Why3_lsp.Runtime
 
-let () =
-  printf "LSP Server has begun!\n%!";
-  Unix_scheduler.timeout ~ms:100
-      (*a function that iterates over a list of notifications, applying call_notification, returns true*) 
-    (fun () -> List.iter
-        (fun n -> call_notification n) (get_notified ()); 
-        true);
-  Unix_scheduler.timeout ~ms:100
-      (*a function that iterates over a list of requests, applying call_request, returns true*) 
-    (fun () -> List.iter
-        (fun n -> call_request n |> pretty_to_channel stdout) (get_requests ()); 
-        true);
-  Unix_scheduler.main_loop interp;;
+let rec loop oc =
+  let str = read_line () in
+  let time = Unix.time () |> Unix.localtime in
+  (Printf.sprintf "[INPUT] [TIME: %d:%d:%d] DATA: %s\n%!" time.tm_hour time.tm_min time.tm_sec str) |>
+  output_string oc;
+  flush oc;
+  interp str; 
+  loop oc;;
+
+let () = let oc = open_out "example.txt" in
+loop oc;;
 
