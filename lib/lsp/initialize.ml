@@ -1,6 +1,6 @@
 open Yojson.Basic.Util
 open Yojson.Basic
-open Rpc_lib.Basic
+open Rpc
 
 type uri = string;;
 
@@ -370,14 +370,14 @@ let json_to_root_uri : t -> uri = function
         ;;
 
     let choose_between id resp = 
-      let open Rpc_lib.Basic.Response in
+      let open Response in
       match resp with
       | Ok res -> yojson_of_result res |> (fun res -> Ok res) |> construct_response id |> Response.yojson_of_t
       | Error err -> yojson_of_error err |> Error.construct_error Error.Code.ServerNotInitialized "Server was already initialized bozo" |>
           Response.construct_response id |> Response.yojson_of_t;;
 
     let respond params : Yojson.Basic.t =
-      let open Rpc_lib.Basic.Response.Error in
+      let open Response.Error in
     try
         let id = Id.t_of_yojson (`Int 7) in
         let fields = request_of_yojson params in 

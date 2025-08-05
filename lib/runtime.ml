@@ -1,6 +1,6 @@
 open Yojson
 open Printf
-open Rpc_lib.Basic
+open Rpc
 open Lsp.Initialize
 open Response.Error
 
@@ -46,7 +46,7 @@ let interp buf =
     | Missing_Member err -> printf "Missing Member: %s\n\n%!" err
     | Yojson__Basic.Util.Type_error (x, y) -> printf " %s experienced a Type error of: %s\n\n%!" (Basic.to_string y) x 
     | Json_error err -> printf "Does not fulfill JSON RPC 2.0 protocol: %s\n\n%!" err
-    | Rpc_lib.Rgx.Rgx_failure err -> printf "Regex error: %s\n\n%!" err
+    | Rgx.Rgx_failure err -> printf "Regex error: %s\n\n%!" err
     | _ as e -> printf "Strange error: %s\n%!" (Printexc.to_string e)
   ;;
 

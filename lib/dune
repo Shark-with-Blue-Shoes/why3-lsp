@@ -1,6 +1,6 @@
 (library
  (name why3_lsp)
 ( flags (:standard -w -20))
-  (libraries yojson threads re why3 rpc_lib))
+  (libraries yojson re why3))
 
 (include_subdirs qualified)
