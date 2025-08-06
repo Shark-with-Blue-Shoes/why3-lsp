@@ -54,9 +54,9 @@ let oc = open_out "why3-lsp.log";;
 
 let get_content_length str = 
   try
-    let rgx = Re.Perl.compile_pat "\\d+" in
+    let rgx = Re.Perl.compile_pat "Content-Length: (\\d+)" in
       let mtch = Re.exec rgx str in
-        let content_len_unsan = Re.Group.get mtch 0 in 
+        let content_len_unsan = Re.Group.get mtch 1 in 
         let content_len = (int_of_string content_len_unsan) in content_len
   with 
   | e -> raise (Rgx.Rgx_failure (sprintf "Error in getting content length: %s\n" (Printexc.to_string e)));;
@@ -85,5 +85,5 @@ let rec loop () =
             logger (get_content_length str) body bytes_read;
         loop ()
   with 
-  e -> Printexc.to_string e |> eprintf "Fatal error: %s\n";;
+  e -> Printexc.to_string e |> eprintf "Error: %s\n";;
 
