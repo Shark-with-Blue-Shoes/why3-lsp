@@ -3,6 +3,7 @@ open Printf
 open Rpc
 open Lsp.Initialize
 open Response.Error
+open Rgx
 
 (*These manage the procedure calls for the requests/notifs*)
 let all_request_calls = StringMap.empty |> add_to_requests "initialize" Initialize.respond
@@ -46,20 +47,11 @@ let interp cnt_len cnt_typ buf =
     | Missing_Member err -> printf "Missing Member: %s\n\n%!" err
     | Yojson__Basic.Util.Type_error (x, y) -> printf " %s experienced a Type error of: %s\n\n%!" (Basic.to_string y) x 
     | Json_error err -> printf "Does not fulfill JSON RPC 2.0 protocol: %s\n\n%!" err
-    | Rgx.Rgx_failure err -> printf "Regex error: %s\n\n%!" err
+    | Rgx_failure err -> printf "Regex error: %s\n\n%!" err
     | _ as e -> printf "Strange error: %s\n%!" (Printexc.to_string e)
   ;;
 
 let oc = open_out "why3-lsp.log";;
-
-let get_content_length str = 
-  try
-    let rgx = Re.Perl.compile_pat "Content-Length: (\\d+)" in
-      let mtch = Re.exec rgx str in
-        let content_len_unsan = Re.Group.get mtch 1 in 
-        let content_len = (int_of_string content_len_unsan) in content_len
-  with 
-  | e -> raise (Rgx.Rgx_failure (sprintf "Error in getting content length: %s\n" (Printexc.to_string e)));;
 
 let logger cnt_len str bytes_read = 
   let time = Unix.time () |> Unix.localtime in
@@ -77,12 +69,12 @@ let get_body cnt_len =
 let rec loop () =
   try
     let str = read_line () in
-      let cnt_len = get_content_length str in
+      let cnt_len = get_content_len str in
         (*This read_line past the extra \r\n, and straight to the body so that \r\n isn't read by get_body*)
         let _ = read_line () in
           let (body, bytes_read) = get_body cnt_len in
             interp cnt_len "type" body;
-            logger (get_content_length str) body bytes_read;
+            logger cnt_len body bytes_read;
         loop ()
   with 
   e -> Printexc.to_string e |> eprintf "Error: %s\n";;
