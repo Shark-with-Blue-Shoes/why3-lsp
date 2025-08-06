@@ -1,7 +1,6 @@
 exception Missing_Member of string
 
 open Yojson.Basic.Util
-open Rgx
 
 let member_opt k = path [k]
 
@@ -263,10 +262,8 @@ module Packet = struct
     | `Assoc _ -> t_of_yojson json
     | _ -> raise (Yojson.Json_error "invalid packet");;
 
-  let t_of_str (buf : string) =
-  let (header_str, json_str) = split_header_json buf in
-    let (content_length, content_type) = split_header header_str in
-    let json = Yojson.Basic.from_string json_str in
+  let t_of_str content_length content_type (buf : string) =
+    let json = Yojson.Basic.from_string buf in
     let select_packet = match json with
     | `List [] -> raise (Yojson.Json_error "invalid packet")
     | `List (x :: xs) ->  

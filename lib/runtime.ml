@@ -34,9 +34,9 @@ let respond_to_batch =
     | `Notification not -> call_notification not
     | `Request req -> call_request req |> Basic.pretty_to_channel stdout
     
-let interp buf =
+let interp cnt_len cnt_typ buf =
   try
-    let packet = Packet.t_of_str buf in
+    let packet = Packet.t_of_str cnt_len cnt_typ buf in
     match packet.body with 
     | Notification not -> call_notification not;
     | Request req -> call_request req |> Basic.pretty_to_channel stdout;
@@ -49,4 +49,35 @@ let interp buf =
     | Rgx.Rgx_failure err -> printf "Regex error: %s\n\n%!" err
     | _ as e -> printf "Strange error: %s\n%!" (Printexc.to_string e)
   ;;
+
+let oc = open_out "why3-lsp.log";;
+
+let get_content_length str = 
+  try
+    let rgx = Re.Perl.compile_pat "\\d+" in
+      let mtch = Re.exec rgx str in
+        let content_len_unsan = Re.Group.get mtch 0 in 
+        let content_len = (int_of_string content_len_unsan) in content_len
+  with 
+  | e -> raise (Rgx.Rgx_failure (sprintf "Error in getting content length: %s\n" (Printexc.to_string e)));;
+
+let logger str bytes_read = 
+  let time = Unix.time () |> Unix.localtime in
+    (sprintf "[INPUT] [TIME: %d:%d:%d] [BYTES READ: %d] DATA: %s\n%!"
+      time.tm_hour time.tm_min time.tm_sec bytes_read str) |>
+      output_string oc;
+    flush oc;;
+
+let get_body cnt_len = 
+  let byt = Bytes.create cnt_len in
+    let bytes_read = In_channel.input stdin byt 0 cnt_len in
+    (Bytes.to_string byt, bytes_read);;
+
+let rec loop () =
+  let str = read_line () in
+    let cnt_len = (get_content_length str) + 2 in
+      let (body, bytes_read) = get_body cnt_len in
+        interp cnt_len "type" body;
+        logger body bytes_read;
+    loop ();;
 
