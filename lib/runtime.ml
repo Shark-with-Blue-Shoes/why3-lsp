@@ -61,23 +61,29 @@ let get_content_length str =
   with 
   | e -> raise (Rgx.Rgx_failure (sprintf "Error in getting content length: %s\n" (Printexc.to_string e)));;
 
-let logger str bytes_read = 
+let logger cnt_len str bytes_read = 
   let time = Unix.time () |> Unix.localtime in
-    (sprintf "[INPUT] [TIME: %d:%d:%d] [BYTES READ: %d] DATA: %s\n%!"
-      time.tm_hour time.tm_min time.tm_sec bytes_read str) |>
+  (sprintf "[INPUT] [TIME: %d:%d:%d] [BYTES READ: %d] [CONTENT-LENGTH: %d] DATA: %s\n%!"
+      cnt_len time.tm_hour time.tm_min time.tm_sec bytes_read str) |>
       output_string oc;
     flush oc;;
 
+(*Gets body and amount of bytes read*)
 let get_body cnt_len = 
   let byt = Bytes.create cnt_len in
     let bytes_read = In_channel.input stdin byt 0 cnt_len in
     (Bytes.to_string byt, bytes_read);;
 
 let rec loop () =
-  let str = read_line () in
-    let cnt_len = (get_content_length str) + 2 in
-      let (body, bytes_read) = get_body cnt_len in
-        interp cnt_len "type" body;
-        logger body bytes_read;
-    loop ();;
+  try
+    let str = read_line () in
+      let cnt_len = get_content_length str in
+        (*This read_line past the extra \r\n, and straight to the body so that \r\n isn't read by get_body*)
+        let _ = read_line () in
+          let (body, bytes_read) = get_body cnt_len in
+            interp cnt_len "type" body;
+            logger (get_content_length str) body bytes_read;
+        loop ()
+  with 
+  e -> Printexc.to_string e |> eprintf "Fatal error: %s\n";;
 
