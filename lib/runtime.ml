@@ -36,26 +36,20 @@ let respond_to_batch =
     | `Request req -> call_request req |> Basic.pretty_to_channel stdout
     
 let interp cnt_len cnt_typ buf =
-  try
     let packet = Packet.t_of_str cnt_len cnt_typ buf in
     match packet.body with 
     | Notification not -> call_notification not;
     | Request req -> call_request req |> Basic.pretty_to_channel stdout;
     | Batch_call ls -> List.iter respond_to_batch ls;
-    | _ -> raise (Json_error "issue");
-  with
-    | Missing_Member err -> printf "Missing Member: %s\n\n%!" err
-    | Yojson__Basic.Util.Type_error (x, y) -> printf " %s experienced a Type error of: %s\n\n%!" (Basic.to_string y) x 
-    | Json_error err -> printf "Does not fulfill JSON RPC 2.0 protocol: %s\n\n%!" err
-    | Rgx_failure err -> printf "Regex error: %s\n\n%!" err
-    | _ as e -> printf "Strange error: %s\n%!" (Printexc.to_string e)
+    | Batch_response _ -> ()
+    | Response _ -> ()
   ;;
 
 let oc = open_out "why3-lsp.log";;
 
 let logger cnt_len str bytes_read = 
   let time = Unix.time () |> Unix.localtime in
-  (sprintf "[INPUT] [TIME: %d:%d:%d] [BYTES READ: %d] [CONTENT-LENGTH: %d] DATA: %s\n%!"
+  (sprintf "[INPUT] [TIME: %d:%d:%d] [BYTES READ: %d] [CONTENT-LENGTH: %d] DATA: %s\n"
       cnt_len time.tm_hour time.tm_min time.tm_sec bytes_read str) |>
       output_string oc;
     flush oc;;
