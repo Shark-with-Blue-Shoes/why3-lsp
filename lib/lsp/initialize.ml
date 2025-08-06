@@ -309,7 +309,7 @@ let json_to_root_uri : t -> uri = function
 
   let request_of_yojson json = 
     {
-    processId = json |> get_req_mem "process_id" |> json_to_p_id;
+    processId = json |> get_req_mem "processId" |> json_to_p_id;
     clientInfo = json |> get_opt_mem "client_info" |> opt_to_client_info;
     locale = json |> get_opt_mem "locale" |> to_string_opt;
     rootPath = json |> get_opt_mem "rootPath" |> opt_to_root_path;

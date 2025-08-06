@@ -17,7 +17,7 @@ let call_request (req : Request.t) =
     | None -> (StringMap.find req.method_ all_request_calls) `Null
   with
     Not_found -> from_string "{}" |> construct_error Code.MethodNotFound "Method was not found bozo" |>
-          Response.construct_response (`Int 10) |> Response.yojson_of_t 
+          Response.construct_response (`Int 10) |> Response.yojson_of_t
 ;;
 
 let all_notification_calls = StringMap.empty
@@ -34,13 +34,13 @@ let respond_to_batch =
   fun (call : Packet.call) -> 
   match call with 
     | `Notification not -> call_notification not
-    | `Request req -> call_request req |> Basic.pretty_to_channel stdout
+    | `Request req -> call_request req |> Basic.to_string |> log;;
     
 let interp cnt_len cnt_typ buf =
     let packet = Packet.t_of_str cnt_len cnt_typ buf in
     match packet.body with 
     | Notification not -> call_notification not;
-    | Request req -> call_request req |> Basic.pretty_to_channel stdout;
+    | Request req -> call_request req |> Basic.to_string |> log;
     | Batch_call ls -> List.iter respond_to_batch ls;
     | Batch_response _ -> ()
     | Response _ -> ()
