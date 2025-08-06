@@ -1,6 +1,4 @@
 
-module Unix_scheduler = struct
-
     (* TODO temporary. This scheduler should be split *)
     let blocking = false
 
@@ -109,4 +107,3 @@ module Unix_scheduler = struct
          done
        with Exit -> ()
 
-end
