@@ -4,6 +4,7 @@ open Rpc
 open Lsp.Initialize
 open Response.Error
 open Rgx
+open Logger
 
 (*These manage the procedure calls for the requests/notifs*)
 let all_request_calls = StringMap.empty |> add_to_requests "initialize" Initialize.respond
@@ -45,15 +46,6 @@ let interp cnt_len cnt_typ buf =
     | Response _ -> ()
   ;;
 
-let oc = open_out "why3-lsp.log";;
-
-let logger cnt_len str bytes_read = 
-  let time = Unix.time () |> Unix.localtime in
-  (sprintf "[INPUT] [TIME: %d:%d:%d] [BYTES READ: %d] [CONTENT-LENGTH: %d] DATA: %s\n"
-      cnt_len time.tm_hour time.tm_min time.tm_sec bytes_read str) |>
-      output_string oc;
-    flush oc;;
-
 (*Gets body and amount of bytes read*)
 let get_body cnt_len = 
   let byt = Bytes.create cnt_len in
@@ -68,7 +60,7 @@ let rec loop () =
         let _ = read_line () in
           let (body, bytes_read) = get_body cnt_len in
             interp cnt_len "type" body;
-            logger cnt_len body bytes_read;
+            log_req cnt_len body bytes_read;
         loop ()
   with 
   e -> Printexc.to_string e |> eprintf "Error: %s\n";;
