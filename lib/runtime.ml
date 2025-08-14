@@ -34,13 +34,13 @@ let respond_to_batch =
   fun (call : Packet.call) -> 
   match call with 
     | `Notification not -> call_notification not
-    | `Request req -> call_request req |> Basic.to_string |> log;;
+    | `Request req -> call_request req |> Basic.to_string |> log_out;;
     
 let interp cnt_len cnt_typ buf =
     let packet = Packet.t_of_str cnt_len cnt_typ buf in
     match packet.body with 
     | Notification not -> call_notification not;
-    | Request req -> call_request req |> Basic.to_string |> log;
+    | Request req -> call_request req |> Basic.to_string |> log_out;
     | Batch_call ls -> List.iter respond_to_batch ls;
     | Batch_response _ -> ()
     | Response _ -> ()
@@ -60,7 +60,7 @@ let rec loop () =
         let _ = read_line () in
           let (body, bytes_read) = get_body cnt_len in
             interp cnt_len "type" body;
-            log_req cnt_len body bytes_read;
+            log_in cnt_len body bytes_read;
         loop ()
   with 
   e -> Printexc.to_string e |> eprintf "Error: %s\n";;
