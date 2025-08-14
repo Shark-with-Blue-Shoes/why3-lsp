@@ -151,31 +151,23 @@ type serverCapabilities = {
 	experimental: lspAny option;
 }
 
- let initialized = ref false;;
+let initialized = ref false;;
    
-  module Req = struct
-    module Types = struct
-
-    type client_info = {
-      name: string;
-      version: string option 
-    };;
-    
-    type request = {
-      processId: [`Null | `Int of int];
-      clientInfo: client_info option;
-      locale: string option;
-      rootPath: [`Null | `String of string] option;
-      rootUri: uri;
-      initializationOptions: lspAny option;
-      clientCapabilities: clientCapabilities;
-      trace: traceValue option;
-      workspaceFolders:  [`Null | `WorkspaceFolders of workspaceFolder list] option;
-    };; 
-
-    end
-    module Conversions = struct
-      open Types
+type request = {
+  processId: [`Null | `Int of int];
+  clientInfo: client_info option;
+  locale: string option;
+  rootPath: [`Null | `String of string] option;
+  rootUri: uri;
+  initializationOptions: lspAny option;
+  clientCapabilities: clientCapabilities;
+  trace: traceValue option;
+  workspaceFolders:  [`Null | `WorkspaceFolders of workspaceFolder list] option;
+} 
+and client_info = {
+  name: string;
+  version: string option 
+};;
 
 let json_to_pid : t -> [`Null | `Int of int] = function
   | (`Null | `Int _) as i -> i
@@ -200,90 +192,71 @@ let opt_to_root_path = function
   | None -> None
   | Some cli_Info -> Some (json_to_root_path cli_Info);;
   
-let json_to_root_uri : t -> uri = function
-  | `String s -> s 
-  | json -> raise (Type_error ("rootUri is of wrong type", json));;
- 
 
-  let request_of_yojson json = 
-    {
-    processId = json |> get_req_mem "processId" |> json_to_pid;
-    clientInfo = json |> get_opt_mem "client_info" |> opt_to_client_info;
-    locale = json |> get_opt_mem "locale" |> to_string_opt;
-    rootPath = json |> get_opt_mem "rootPath" |> opt_to_root_path;
-    rootUri = json |> get_req_mem "rootUri" |> json_to_root_uri;
-    initializationOptions = json |> get_opt_mem  "initializationOptions" |> opt_to_lsp_any;
-    clientCapabilities = {l = true};
-    trace = json |> get_opt_mem  "trace" |> opt_to_trace;
-    workspaceFolders = json |> get_opt_mem "workspaceFolders" |> opt_to_workspace_folders
-    };;
+let request_of_yojson json = 
+  {
+  processId = json |> get_req_mem "processId" |> json_to_pid;
+  clientInfo = json |> get_opt_mem "client_info" |> opt_to_client_info;
+  locale = json |> get_opt_mem "locale" |> to_string_opt;
+  rootPath = json |> get_opt_mem "rootPath" |> opt_to_root_path;
+  rootUri = json |> get_req_mem "rootUri" |> json_to_root_uri;
+  initializationOptions = json |> get_opt_mem  "initializationOptions" |> opt_to_lsp_any;
+  clientCapabilities = {l = true};
+  trace = json |> get_opt_mem  "trace" |> opt_to_trace;
+  workspaceFolders = json |> get_opt_mem "workspaceFolders" |> opt_to_workspace_folders
+};;
 
-  end
-  end
+type response = {
+  capabilities: serverCapabilities;
+  serverInfo: serverInfo option;
+}
+and serverInfo = {
+  name: string;
+  version: string option
+};;
 
-  open Req.Types
-  open Req.Conversions
+type error = {
+  retry: bool;
+}
 
-    module Resp = struct 
+let yojson_of_result res = 
+  Ok (`Assoc ["capabilities", (optLspAny_to_json res.capabilities.experimental)]);; 
 
-    type serverInfo = {
-      name: string;
-      version: string option
-    }
+let yojson_of_error_data err : Yojson.Basic.t  = 
+  `Assoc ["retry", `Bool err.retry];;
 
-    type response = {
-      capabilities: serverCapabilities;
-      serverInfo: serverInfo option;
-    };;
-    
-    type error = {
-      retry: bool;
-    }
+let resp_to_json id resp : Yojson.Basic.t = 
+  let open Response in
+  match resp with
+  | Ok res -> 
+      yojson_of_result res |>  
+      construct_response id |> Response.yojson_of_t
+  | Error err -> yojson_of_error_data err |> 
+    Error.construct_error Error.Code.ServerNotInitialized "Server was already initialized bozo" |>
+    Response.construct_response id |> Response.yojson_of_t;;
 
-    type result = (response, error) Result.t;;
+let initialize process_id uri : (response, error) Result.t =
+  let _ = uri in
+  try
+    assert (!initialized = false);
+    initialized := true; 
+    match process_id with
+    | `Null -> Ok {capabilities = {experimental = Some Null}; serverInfo = None}
+    | `Int _ -> Ok {capabilities = {experimental = Some Null}; serverInfo = None}
+  with _ -> Error {retry = false}
+    ;;
 
-    let yojson_of_result res = 
-      Ok (`Assoc ["capabilities", (optLspAny_to_json res.capabilities.experimental)]);; 
-
-    let yojson_of_error_data err : Yojson.Basic.t  = 
-      `Assoc ["retry", `Bool err.retry];;
-
-    let resp_to_json id resp : Yojson.Basic.t = 
-      let open Response in
-      match resp with
-      | Ok res -> 
-          yojson_of_result res |>  
-          construct_response id |> Response.yojson_of_t
-      | Error err -> yojson_of_error_data err |> 
-        Error.construct_error Error.Code.ServerNotInitialized "Server was already initialized bozo" |>
-        Response.construct_response id |> Response.yojson_of_t;;
-
-    end
-
-    open Resp
-    
-    let initialize process_id uri : result =
-      let _ = uri in
-      try
-        assert (!initialized = false);
-        initialized := true; 
-        match process_id with
-        | `Null -> Ok {capabilities = {experimental = Some Null}; serverInfo = None}
-        | `Int _ -> Ok {capabilities = {experimental = Some Null}; serverInfo = None}
-      with _ -> Error {retry = false}
-        ;;
-
-    let respond params : Yojson.Basic.t =
-      let open Response.Error in
-    try
-        let id = Id.t_of_yojson (`Int 7) in
-        let fields = request_of_yojson params in 
-          initialize fields.processId fields.rootUri |> resp_to_json id 
-    with
-    | Missing_Member str -> yojson_of_error_data {retry = false} |> 
-      construct_error Code.InvalidRequest str |>
-          Response.construct_response (`Int 0) |> Response.yojson_of_t
-    | str ->  yojson_of_error_data {retry = false} |> 
-      construct_error Code.InternalError (Printexc.to_string str) |>
-          Response.construct_response (`Int 0) |> Response.yojson_of_t
+let respond params : Yojson.Basic.t =
+  let open Response.Error in
+try
+    let id = Id.t_of_yojson (`Int 7) in
+    let fields = request_of_yojson params in 
+      initialize fields.processId fields.rootUri |> resp_to_json id 
+with
+| Missing_Member str -> yojson_of_error_data {retry = false} |> 
+  construct_error Code.InvalidRequest str |>
+      Response.construct_response (`Int 0) |> Response.yojson_of_t
+| str ->  yojson_of_error_data {retry = false} |> 
+  construct_error Code.InternalError (Printexc.to_string str) |>
+      Response.construct_response (`Int 0) |> Response.yojson_of_t
 

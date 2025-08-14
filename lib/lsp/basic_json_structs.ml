@@ -104,3 +104,7 @@ type traceValue =
   | None -> `Null
   | Some ele -> lspAny_to_json ele;;
  
+let json_to_root_uri : t -> uri = function
+  | `String s -> s 
+  | json -> raise (Type_error ("rootUri is of wrong type", json));;
+ 
