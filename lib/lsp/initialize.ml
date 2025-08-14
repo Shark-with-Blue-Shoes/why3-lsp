@@ -23,23 +23,19 @@ and fileOperations = {
 	willDelete: fileOperationRegistrationOptions option;
 };;*)
 
-let to_string_opt = function
-  | None -> None
-  | Some str -> Some (to_string str);;
+type lspAny = 
+  | Null
+  | String of string
+  | LspObject of lspObject
+  | LspArray of lspArray
+  | Int of int
+  | UInt of int
+  | Decimal of float
+  | Bool of bool
 
-    type lspAny = 
-    | Null
-    | String of string
-    | LspObject of lspObject
-    | LspArray of lspArray
-    | Int of int
-    | UInt of int
-    | Decimal of float
-    | Bool of bool
+  and lspObject = (string * lspAny) list
 
-    and lspObject = (string * lspAny) list
-
-    and lspArray = lspAny list;;
+  and lspArray = lspAny list;;
       
 type clientCapabilities = {
   (*synchronization: textDocumentSyncClientCapabilities option;
@@ -332,33 +328,39 @@ let json_to_root_uri : t -> uri = function
       name: string;
       version: string option
     }
-      type result = {
+
+    type response = {
       capabilities: serverCapabilities;
       serverInfo: serverInfo option;
     };;
-
-    let yojson_of_result res : Yojson.Basic.t = 
-      `Assoc ["capabilities", (optLspAny_to_json res.capabilities.experimental)];;
     
-
     type error = {
       retry: bool;
     }
 
-    type response = (result, error) Result.t;;
+    type result = (response, error) Result.t;;
 
-    let yojson_of_error err : Yojson.Basic.t  = 
+    let yojson_of_result res = 
+      Ok (`Assoc ["capabilities", (optLspAny_to_json res.capabilities.experimental)]);; 
+
+    let yojson_of_error_data err : Yojson.Basic.t  = 
       `Assoc ["retry", `Bool err.retry];;
 
-    let yojson_of_response : response -> t = function
-      | Ok res -> yojson_of_result res
-      | Error err -> yojson_of_error err
+    let resp_to_json id resp : Yojson.Basic.t = 
+      let open Response in
+      match resp with
+      | Ok res -> 
+          yojson_of_result res |>  
+          construct_response id |> Response.yojson_of_t
+      | Error err -> yojson_of_error_data err |> 
+        Error.construct_error Error.Code.ServerNotInitialized "Server was already initialized bozo" |>
+        Response.construct_response id |> Response.yojson_of_t;;
 
     end
 
     open Resp
     
-    let initialize process_id uri : response =
+    let initialize process_id uri : result =
       let _ = uri in
       try
         assert (!initialized = false);
@@ -369,24 +371,17 @@ let json_to_root_uri : t -> uri = function
       with _ -> Error {retry = false}
         ;;
 
-    let choose_between id resp = 
-      let open Response in
-      match resp with
-      | Ok res -> yojson_of_result res |> (fun res -> Ok res) |> construct_response id |> Response.yojson_of_t
-      | Error err -> yojson_of_error err |> Error.construct_error Error.Code.ServerNotInitialized "Server was already initialized bozo" |>
-          Response.construct_response id |> Response.yojson_of_t;;
-
     let respond params : Yojson.Basic.t =
       let open Response.Error in
     try
         let id = Id.t_of_yojson (`Int 7) in
         let fields = request_of_yojson params in 
-          initialize fields.processId fields.rootUri |> choose_between id 
+          initialize fields.processId fields.rootUri |> resp_to_json id 
     with
-    | Missing_Member str -> yojson_of_error {retry = false} |> 
+    | Missing_Member str -> yojson_of_error_data {retry = false} |> 
       construct_error Code.InvalidRequest str |>
           Response.construct_response (`Int 0) |> Response.yojson_of_t
-    | str ->  yojson_of_error {retry = false} |> 
+    | str ->  yojson_of_error_data {retry = false} |> 
       construct_error Code.InternalError (Printexc.to_string str) |>
           Response.construct_response (`Int 0) |> Response.yojson_of_t
 

@@ -4,6 +4,10 @@ open Yojson.Basic.Util
 
 let member_opt k = path [k]
 
+let to_string_opt = function
+  | None -> None
+  | Some str -> Some (to_string str);;
+
 (*This gets a required member*)
 let get_req_mem name json : Yojson.Basic.t = 
   let mem = member_opt name json in
@@ -183,9 +187,11 @@ module Response = struct
   type t =
     { id : Id.t;
       result : (Yojson.Basic.t, Error.t) Result.t
-    }
+    };;
+  
+  type result = (Yojson.Basic.t, Error.t) Result.t;; 
 
-  let construct_response id (res : (Yojson.Basic.t, Error.t) Result.t) =
+  let construct_response id (res : result) =
     {
       id = id;
       result = res 
