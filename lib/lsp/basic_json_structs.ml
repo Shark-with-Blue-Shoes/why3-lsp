@@ -54,8 +54,10 @@ type traceValue =
                                                  | "off" -> Off
                                                  | "messages" -> Messages
                                                  | "verbose" -> Verbose
-                                                 | x -> raise (Type_error ("trace value does not match any known string", `String x)))
-                                 | json -> raise (Type_error ("trace value is of wrong type", json))) in 
+                                                 | x ->          
+                                          Type_error ("trace value does not match any known string",`String x)
+                                          |> raise)
+                                 | json -> Type_error ("trace value is of wrong type", json) |> raise) in 
                     Some trace;;
   
   let json_workspace_folder : t -> workspaceFolder = function
@@ -63,12 +65,12 @@ type traceValue =
       uri = (json |> get_req_mem "uri" |> to_string);
       name = (json |> get_req_mem "name" |> to_string);
     }
-  | json -> raise (Type_error ("workspaceFolder is of wrong type", json));;
+  | json -> Type_error ("workspaceFolder is of wrong type", json) |> raise ;;
 
   let json_to_workspace_folders : t -> [`Null | `WorkspaceFolders of workspaceFolder list] = function
   | `Null ->  `Null
   | `List ls ->  `WorkspaceFolders (List.map (fun wf -> json_workspace_folder wf) ls)
-  | json -> raise (Type_error ("WorkspaceFolders is of wrong type", json))
+  | json -> Type_error ("WorkspaceFolders is of wrong type", json) |> raise
   
   let opt_to_workspace_folders : t option -> [`Null | `WorkspaceFolders of workspaceFolder list] option = function
   | None -> None
@@ -103,5 +105,5 @@ type traceValue =
  
 let json_to_root_uri : t -> uri = function
   | `String s -> s 
-  | json -> raise (Type_error ("rootUri is of wrong type", json));;
+  | json -> Type_error ("rootUri is of wrong type", json) |> raise;;
  

@@ -9,7 +9,7 @@ let get_header str =
       let mtch = Re.exec rgx str in
         let headers = Re.Group.get mtch 1 in headers
   with
-    e -> raise (Rgx_failure (sprintf "Error in getting headers: %s\n" (Printexc.to_string e)));;
+    e -> Rgx_failure (sprintf "Error in getting headers: %s\n" (Printexc.to_string e)) |> raise;;
 
 let get_json str = 
   try 
@@ -23,7 +23,7 @@ let get_json str =
         let mtch = Re.exec rgx str in 
           let json = Re.Group.get mtch 0 in json
   with 
-    e -> raise (Rgx_failure (sprintf "Error in getting json: %s\n" (Printexc.to_string e)));;
+    e -> Rgx_failure (sprintf "Error in getting json: %s\n" (Printexc.to_string e)) |> raise;;
 
 let split_header_json str = 
     let json = get_json str in
@@ -37,7 +37,7 @@ let get_content_len str =
         let content_len_unsan = Re.Group.get mtch 1 in 
         let content_len = (int_of_string content_len_unsan) in content_len
   with 
-  | e -> raise (Rgx_failure (sprintf "Error in getting content length: %s\n" (Printexc.to_string e)));;
+  | e -> Rgx_failure (sprintf "Error in getting content length: %s\n" (Printexc.to_string e)) |> raise;;
 
 
 let get_content_typ str = 
@@ -46,5 +46,5 @@ let get_content_typ str =
       let mtch = Re.exec rgx str in 
         let content_type = Re.Group.get mtch 1 in content_type
   with 
-  | e -> raise (Rgx_failure (sprintf "Error in getting content type: %s\n" (Printexc.to_string e)));;
+  | e -> Rgx_failure (sprintf "Error in getting content type: %s\n" (Printexc.to_string e)) |> raise;;
 

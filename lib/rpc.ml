@@ -13,7 +13,7 @@ let get_req_mem name json : Yojson.Basic.t =
   let mem = member_opt name json in
   match mem with
   | Some elem  -> elem
-  | None -> raise (Missing_Member (Printf.sprintf "A obligatory flag called %s is missing!\n" name))
+  | None -> Missing_Member (Printf.sprintf "A obligatory flag called %s is missing!\n" name) |> raise
 
 (*This gets an option member*)
 let get_opt_mem name json : Yojson.Basic.t option = 
@@ -45,8 +45,8 @@ module Id = struct
     match json with
     | `Int i -> `Int i
     | `String str -> `String str
-    | `Null -> raise (Missing_Member "Id is missing!")
-    | err -> raise (Type_error ("Not correct type of id ", err))
+    | `Null -> Missing_Member "Id is missing!" |> raise
+    | err -> Type_error ("Not correct type of id ", err) |> raise
 
 end
 
@@ -149,7 +149,7 @@ module Response = struct
       let t_of_yojson (json : Yojson.Basic.t) =
         match json with
         | `Int i -> of_int i
-        | err -> raise (Type_error ("Not correct type of param ", err))
+        | err -> Type_error ("Not correct type of param ", err) |> raise 
         ;;
      
           let yojson_of_t t = `Int (to_int t)
@@ -214,7 +214,7 @@ let assert_jsonrpc_version json =
     let jsonrpc = get_req_mem "jsonrpc" json |> to_string in
     if not (String.equal jsonrpc Constant.jsonrpcv)
     then
-      raise (Yojson.Json_error ("invalid packet: jsonrpc version doesn't match " ^ jsonrpc))
+      Yojson.Json_error ("invalid packet: jsonrpc version doesn't match " ^ jsonrpc) |> raise
 ;;
 
 module Packet = struct
@@ -256,30 +256,30 @@ module Packet = struct
         with _ -> try
           let res = Response.t_of_yojson json in 
           Response res 
-          with _ -> raise (Yojson.Json_error "invalid packet");;
+          with _ -> Yojson.Json_error "invalid packet" |> raise;;
 
   let t_of_yojson_single json =
     match json with
     | `Assoc _ -> t_of_yojson json
-    | _ -> raise (Yojson.Json_error "invalid packet");;
+    | _ -> Yojson.Json_error "invalid packet" |> raise;;
 
   let t_of_str content_length content_type (buf : string) =
     let json = Yojson.Basic.from_string buf in
     let select_packet = match json with
-    | `List [] -> raise (Yojson.Json_error "invalid packet")
+    | `List [] -> Yojson.Json_error "invalid packet" |> raise 
     | `List (x :: xs) ->  
       (* we inspect the first element to see what we're dealing with *)
       let x =
         match x with
         | `Assoc _ -> t_of_yojson x
-        | _ -> raise (Yojson.Json_error "invalid packet")
+        | _ -> Yojson.Json_error "invalid packet" |> raise 
       in
       (match
          match x with
          | Notification x -> `Call (`Notification x)
          | Request x -> `Call (`Request x)
          | Response r -> `Response r
-         | _ -> raise (Yojson.Json_error "invalid packet")
+         | _ -> (Yojson.Json_error "invalid packet") |> raise
        with
        | `Call x ->
          Batch_call
@@ -289,7 +289,7 @@ module Packet = struct
               match x with
               | Notification n -> `Notification n
               | Request n -> `Request n
-              | _ -> raise (Yojson.Json_error "invalid packet")) xs)
+              | _ -> Yojson.Json_error "invalid packet" |> raise) xs)
        | `Response x ->
          Batch_response
            (x
@@ -297,7 +297,7 @@ module Packet = struct
               let resp = t_of_yojson_single resp in
               match resp with
               | Response n -> n
-              | _ -> raise (Yojson.Json_error "invalid packet")) xs))
+              | _ -> Yojson.Json_error "invalid packet" |> raise) xs))
       | _ -> t_of_yojson_single json in
       {
       content_length = content_length;

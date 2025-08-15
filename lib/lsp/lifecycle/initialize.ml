@@ -171,14 +171,14 @@ and client_info = {
 
 let json_to_pid : t -> [`Null | `Int of int] = function
   | (`Null | `Int _) as i -> i
-  | json -> raise (Type_error ("process_id is of wrong type", json))
+  | json -> Type_error ("process_id is of wrong type", json) |> raise
 
 let json_to_client_info = function
   | `Assoc _ as json -> {
       name = (json |> get_req_mem "name" |> to_string);
       version = (json |> get_opt_mem "version" |> to_string_opt);
     }
-  | json -> raise (Type_error ("client_info is of wrong type", json))
+  | json -> Type_error ("client_info is of wrong type", json) |> raise
 
 let opt_to_client_info : t option -> client_info option = function
   | None -> None
@@ -186,7 +186,7 @@ let opt_to_client_info : t option -> client_info option = function
   
 let json_to_root_path : t -> [`Null | `String of string] = function  
   | (`Null | `String _) as i -> i
-  | json -> raise (Type_error ("rootpath is of wrong type", json));;
+  | json -> Type_error ("rootpath is of wrong type", json) |> raise;;
 
 let opt_to_root_path = function
   | None -> None
