@@ -248,15 +248,15 @@ let initialize process_id uri : (response, error) Result.t =
 
 let respond params : Yojson.Basic.t =
   let open Response.Error in
-try
-    let id = Id.t_of_yojson (`Int 7) in
+  let id = Id.t_of_yojson (`Int 7) in
+  try
     let fields = request_of_yojson params in 
       initialize fields.processId fields.rootUri |> resp_to_json id 
-with
-| Missing_Member str -> yojson_of_error_data {retry = false} |> 
-  construct_error Code.InvalidRequest str |>
-      Response.construct_response (`Int 0) |> Response.yojson_of_t
-| str ->  yojson_of_error_data {retry = false} |> 
-  construct_error Code.InternalError (Printexc.to_string str) |>
-      Response.construct_response (`Int 0) |> Response.yojson_of_t
+  with
+  | Missing_Member str -> yojson_of_error_data {retry = false} |> 
+    construct_error Code.InvalidRequest str |>
+    Response.construct_response id |> Response.yojson_of_t
+  | str ->  yojson_of_error_data {retry = false} |> 
+    construct_error Code.InternalError (Printexc.to_string str) |>
+    Response.construct_response id |> Response.yojson_of_t
 

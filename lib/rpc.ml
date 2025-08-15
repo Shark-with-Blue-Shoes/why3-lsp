@@ -48,11 +48,6 @@ module Id = struct
     | `Null -> raise (Missing_Member "Id is missing!")
     | err -> raise (Type_error ("Not correct type of id ", err))
 
-  let to_str (t : t) =
-  match t with
-    | `String x -> x
-    | `Int x -> Printf.sprintf "%d" x
-
 end
 
 module Request = struct
