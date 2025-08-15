@@ -1,7 +1,7 @@
 open Yojson
 open Printf
 open Rpc
-open Lsp
+open Lsp.Lifecycle
 open Response.Error
 open Rgx
 open Logger
