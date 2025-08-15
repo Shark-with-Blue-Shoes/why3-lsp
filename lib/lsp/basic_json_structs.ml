@@ -47,19 +47,16 @@ type traceValue =
   | Messages
   | Verbose
 
-  let str_to_trace = function 
-    | "off" -> Off
-    | "messages" -> Messages
-    | "verbose" -> Verbose
-    | x -> raise (Type_error ("trace value does not match any known string", `String x));;
-
-  let json_to_trace = function 
-  | `String str -> str_to_trace str
-  | json -> raise (Type_error ("trace value is of wrong type", json));;
-  
   let opt_to_trace = function
     | None -> None
-    | Some trace -> Some (json_to_trace trace);;
+    | Some trace -> let trace = (match trace with
+                                 | `String str -> (match str with
+                                                 | "off" -> Off
+                                                 | "messages" -> Messages
+                                                 | "verbose" -> Verbose
+                                                 | x -> raise (Type_error ("trace value does not match any known string", `String x)))
+                                 | json -> raise (Type_error ("trace value is of wrong type", json))) in 
+                    Some trace;;
   
   let json_workspace_folder : t -> workspaceFolder = function
   | `Assoc _ as json -> {

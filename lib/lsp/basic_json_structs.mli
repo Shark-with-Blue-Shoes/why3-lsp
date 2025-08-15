@@ -12,8 +12,6 @@ type lspAny =
 and lspObject = (string * lspAny) list
 and lspArray = lspAny list
 type traceValue = Off | Messages | Verbose
-val str_to_trace : string -> traceValue
-val json_to_trace : Yojson__Basic.t -> traceValue
 val opt_to_trace : Yojson__Basic.t option -> traceValue option
 val json_workspace_folder : Yojson.Basic.t -> workspaceFolder
 val json_to_workspace_folders :
