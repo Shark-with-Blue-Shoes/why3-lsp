@@ -206,7 +206,7 @@ let request_of_yojson json =
   workspaceFolders = json |> get_opt_mem "workspaceFolders" |> opt_to_workspace_folders
 };;
 
-type response = {
+type ok = {
   capabilities: serverCapabilities;
   serverInfo: serverInfo option;
 }
@@ -219,22 +219,22 @@ type error = {
   retry: bool;
 }
 
-let yojson_of_result res = 
-  `Assoc ["capabilities", (optLspAny_to_json res.capabilities.experimental)];; 
+let yojson_of_ok (ok : ok) = 
+  `Assoc ["capabilities", (optLspAny_to_json ok.capabilities.experimental)];; 
 
 let yojson_of_error_data (err : error) : Yojson.Basic.t  = 
   `Assoc ["retry", `Bool err.retry];;
 
 let resp_to_json id resp : Yojson.Basic.t = 
   match resp with
-  | Ok res -> yojson_of_result res |>
+  | Ok res -> yojson_of_ok res |>
        Response.ok id  |> Response.yojson_of_t
   | Error err -> let open Response in  
     yojson_of_error_data err |> 
     Error.make Response.Error.Code.ServerNotInitialized "Server was already initialized bozo" |>
     Response.error id |> Response.yojson_of_t;;
 
-let initialize process_id uri : (response, error) Result.t =
+let initialize process_id uri : (ok, error) Result.t =
   let _ = uri in
   try
     assert (!initialized = false);

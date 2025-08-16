@@ -36,7 +36,7 @@ val opt_to_root_path :
 
 val request_of_yojson : Yojson__Basic.t -> request
 
-type response = {
+type ok = {
   capabilities : serverCapabilities;
   serverInfo : serverInfo option;
 }
@@ -44,14 +44,14 @@ and serverInfo = { name : string; version : string option; }
 
 type error = { retry : bool; }
 
-val yojson_of_result :
-  response -> [> `Assoc of (string * Yojson.Basic.t) list ]
+val yojson_of_ok :
+  ok -> [> `Assoc of (string * Yojson.Basic.t) list ]
 
 val yojson_of_error_data : error -> Yojson.Basic.t
 
 val resp_to_json :
-  Rpc.Id.t -> (response, error) result -> Yojson.Basic.t
+  Rpc.Id.t -> (ok, error) result -> Yojson.Basic.t
 
-val initialize : [< `Int of 'a | `Null ] -> 'b -> (response, error) Result.t
+val initialize : [< `Int of 'a | `Null ] -> 'b -> (ok, error) Result.t
 
 val respond : Yojson__Basic.t -> Yojson.Basic.t
