@@ -220,20 +220,19 @@ type error = {
 }
 
 let yojson_of_result res = 
-  Ok (`Assoc ["capabilities", (optLspAny_to_json res.capabilities.experimental)]);; 
+  `Assoc ["capabilities", (optLspAny_to_json res.capabilities.experimental)];; 
 
-let yojson_of_error_data err : Yojson.Basic.t  = 
+let yojson_of_error_data (err : error) : Yojson.Basic.t  = 
   `Assoc ["retry", `Bool err.retry];;
 
 let resp_to_json id resp : Yojson.Basic.t = 
-  let open Response in
   match resp with
-  | Ok res -> 
-      yojson_of_result res |>  
-      construct_response id |> Response.yojson_of_t
-  | Error err -> yojson_of_error_data err |> 
-    Error.construct_error Error.Code.ServerNotInitialized "Server was already initialized bozo" |>
-    Response.construct_response id |> Response.yojson_of_t;;
+  | Ok res -> yojson_of_result res |>
+       Response.ok id  |> Response.yojson_of_t
+  | Error err -> let open Response in  
+    yojson_of_error_data err |> 
+    Error.make Response.Error.Code.ServerNotInitialized "Server was already initialized bozo" |>
+    Response.error id |> Response.yojson_of_t;;
 
 let initialize process_id uri : (response, error) Result.t =
   let _ = uri in
@@ -247,16 +246,16 @@ let initialize process_id uri : (response, error) Result.t =
     ;;
 
 let respond params : Yojson.Basic.t =
-  let open Response.Error in
+  let open Response in
   let id = Id.t_of_yojson (`Int 7) in
   try
     let fields = request_of_yojson params in 
       initialize fields.processId fields.rootUri |> resp_to_json id 
   with
   | Missing_Member str -> yojson_of_error_data {retry = false} |> 
-    construct_error Code.InvalidRequest str |>
-    Response.construct_response id |> Response.yojson_of_t
+    Error.make Error.Code.InvalidRequest str |>
+    Response.error id |> Response.yojson_of_t
   | str ->  yojson_of_error_data {retry = false} |> 
-    construct_error Code.InternalError (Printexc.to_string str) |>
-    Response.construct_response id |> Response.yojson_of_t
+    Error.make Error.Code.InternalError (Printexc.to_string str) |>
+    Response.error id |> Response.yojson_of_t
 

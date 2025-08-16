@@ -1,8 +1,17 @@
 exception Missing_Member of string
+
+(*Alias for path*)
 val member_opt : string -> Yojson__Basic.t -> Yojson__Basic.t option
+
+(*If input is `String s, return Some s, else None*)
 val to_string_opt : Yojson__Basic.t option -> string option
+
+(*Throws an error if member is not present*)
 val get_req_mem : string -> Yojson__Basic.t -> Yojson.Basic.t
+
+(*returns None if member is not present*)
 val get_opt_mem : string -> Yojson__Basic.t -> Yojson.Basic.t option
+
 module Constant :
   sig
     val jsonrpc : string
@@ -13,24 +22,28 @@ module Constant :
     val result : string
     val error : string
   end
+
 module Id :
   sig
     type t = [ `Int of int | `String of string ]
     val yojson_of_t : t -> Yojson.Basic.t
     val t_of_yojson : Yojson__Basic.t -> t
   end
+
 module Request :
   sig
     type t = { id : Id.t; method_ : string; params : Yojson.Basic.t option; }
     val t_of_yojson : Yojson__Basic.t -> t
     val yojson_of_t : t -> Yojson.Basic.t
   end
+
 module Notification :
   sig
     type t = { method_ : string; params : Yojson.Basic.t option; }
     val t_of_yojson : Yojson__Basic.t -> t
     val yojson_of_t : t -> Yojson.Basic.t
   end
+
 module Response :
   sig
     module Error :
@@ -57,21 +70,27 @@ module Response :
             val t_of_yojson : Yojson.Basic.t -> t
             val yojson_of_t : t -> [> `Int of int ]
           end
+
         type t = { code : Code.t; message : string; data : Yojson.Basic.t; }
-        val construct_error :
-          Code.t -> string -> Yojson.Basic.t -> ('a, t) result
+        val make :
+          Code.t -> string -> Yojson.Basic.t -> t
         val yojson_of_t : t -> Yojson.Basic.t
         val t_of_yojson : Yojson.Basic.t -> t
       end
+
     type t = { id : Id.t; result : (Yojson.Basic.t, Error.t) Result.t; }
     type result = (Yojson.Basic.t, Error.t) Result.t
-    val construct_response : Id.t -> result -> t
-    val t_of_yojson : Yojson__Basic.t -> t
-    val yojson_of_t : t -> Yojson.Basic.t
-    val make : id:Id.t -> result:(Yojson.Basic.t, Error.t) Result.t -> t
+
+    val make : Id.t -> (Yojson.Basic.t, Error.t) Result.t -> t
+
     val ok : Id.t -> Yojson.Basic.t -> t
     val error : Id.t -> Error.t -> t
+
+    val t_of_yojson : Yojson__Basic.t -> t
+    val yojson_of_t : t -> Yojson.Basic.t
+
   end
+
 val assert_jsonrpc_version : Yojson__Basic.t -> unit
 module Packet :
   sig

@@ -45,7 +45,7 @@ and serverInfo = { name : string; version : string option; }
 type error = { retry : bool; }
 
 val yojson_of_result :
-  response -> ([> `Assoc of (string * Yojson.Basic.t) list ], 'a) result
+  response -> [> `Assoc of (string * Yojson.Basic.t) list ]
 
 val yojson_of_error_data : error -> Yojson.Basic.t
 

@@ -158,12 +158,7 @@ module Response = struct
       ; data : Yojson.Basic.t
       }
 
-    let construct_error code msg _data = 
-      Error {
-        code = code;
-        message = msg;
-        data = _data
-      };;
+    let make code msg _data = { code = code; message = msg; data = _data };;
    
     let yojson_of_t t : Yojson.Basic.t =
       `Assoc ["code" , (`Int (Code.to_int t.code)); "message", (`String t.message); "data", t.data]
@@ -183,27 +178,22 @@ module Response = struct
   
   type result = (Yojson.Basic.t, Error.t) Result.t;; 
 
-  let construct_response id (res : result) =
-    {
-      id = id;
-      result = res 
-    }
+  let make id result = { id; result };;
+  let ok id result = make id (Ok result);;
+  let error id error = make id (Error error);;
 
   let t_of_yojson json : t =
     let res_opt = get_opt_mem "result" json  in
     let res = match res_opt with
     | None -> Error (get_req_mem "error" json |> Error.t_of_yojson)
     | Some result -> Ok result in
-    construct_response (Id.t_of_yojson json) res;;
+    make (Id.t_of_yojson json) res;;
 
     let yojson_of_t t : Yojson.Basic.t = 
       match t.result with
       | Error x -> `Assoc ["id" , Id.yojson_of_t t.id; "error", Error.yojson_of_t x]
       | Ok x -> `Assoc ["id" , Id.yojson_of_t t.id; "result", x];;
 
-    let make ~id ~result = { id; result };;
-    let ok id result = make ~id ~result:(Ok result);;
-    let error id error = make ~id ~result:(Error error);;
 end
 
 
