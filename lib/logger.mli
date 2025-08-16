@@ -5,3 +5,6 @@ val log_in : int -> string -> int -> unit
 
 (*Logs output*)
 val log_out : string -> unit
+
+(*Logs error*)
+val log_err : string -> unit

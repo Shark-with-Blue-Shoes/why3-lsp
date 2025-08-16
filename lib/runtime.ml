@@ -1,5 +1,4 @@
 open Yojson
-open Printf
 open Rpc
 open Lsp.Lifecycle
 open Response.Error
@@ -63,5 +62,5 @@ let rec loop () =
             interp cnt_len "type" body;
         loop ()
   with 
-  e -> Printexc.to_string e |> eprintf "Error: %s\n";;
+  e -> Printexc.to_string e |> log_err; loop ();;
 

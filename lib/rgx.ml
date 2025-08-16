@@ -9,5 +9,5 @@ let get_content_len str =
         let content_len_unsan = Re.Group.get mtch 1 in 
         let content_len = (int_of_string content_len_unsan) in content_len
   with 
-  | e -> Rgx_failure (sprintf "Error in getting content length: %s\n" (Printexc.to_string e)) |> raise;;
+  | e -> Rgx_failure (Printexc.to_string e |> sprintf "Error in getting content length: %s\n") |> raise;;
 

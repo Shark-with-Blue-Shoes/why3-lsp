@@ -15,3 +15,10 @@ let log_out str =
       time.tm_hour time.tm_min time.tm_sec str) |>
       output_string oc;
     flush oc;;
+
+let log_err str = 
+  let time = Unix.time () |> Unix.localtime in
+  (sprintf "[ERROR] [TIME: %d:%d:%d] MSG: %s"
+      time.tm_hour time.tm_min time.tm_sec str) |>
+      output_string oc;
+    flush oc;;
