@@ -199,8 +199,8 @@ let request_of_yojson json =
   clientInfo = json |> get_opt_mem "client_info" |> opt_to_client_info;
   locale = json |> get_opt_mem "locale" |> to_string_opt;
   rootPath = json |> get_opt_mem "rootPath" |> opt_to_root_path;
-  rootUri = json |> get_req_mem "rootUri" |> json_to_root_uri;
-  initializationOptions = json |> get_opt_mem  "initializationOptions" |> opt_to_lsp_any;
+  rootUri = json |> get_req_mem "rootUri" |> rooturi_of_json;
+  initializationOptions = json |> get_opt_mem  "initializationOptions" |> lspAny_of_json_opt;
   clientCapabilities = {l = true};
   trace = json |> get_opt_mem  "trace" |> opt_to_trace;
   workspaceFolders = json |> get_opt_mem "workspaceFolders" |> opt_to_workspace_folders
@@ -220,7 +220,7 @@ type error = {
 }
 
 let yojson_of_ok (ok : ok) = 
-  `Assoc ["capabilities", (optLspAny_to_json ok.capabilities.experimental)];; 
+  `Assoc ["capabilities", (json_of_lspAny_opt ok.capabilities.experimental)];; 
 
 let yojson_of_error_data (err : error) : Yojson.Basic.t  = 
   `Assoc ["retry", `Bool err.retry];;
