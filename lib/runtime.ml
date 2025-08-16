@@ -59,8 +59,8 @@ let rec loop () =
         (*This read_line past the extra \r\n, and straight to the body so that \r\n isn't read by get_body*)
         let _ = read_line () in
           let (body, bytes_read) = get_body cnt_len in
-            interp cnt_len "type" body;
             log_in cnt_len body bytes_read;
+            interp cnt_len "type" body;
         loop ()
   with 
   e -> Printexc.to_string e |> eprintf "Error: %s\n";;
