@@ -107,8 +107,6 @@ module Response = struct
       | ServerCancelled
       | ContentModified
       | RequestCancelled
-      (* all other codes are custom *)
-      | ServerAlreadyInitialized
       | Other of int
      
       let of_int = function
@@ -142,7 +140,6 @@ module Response = struct
       | ContentModified -> -32801
       | ServerCancelled -> -32802
       | RequestFailed -> -32803
-      | ServerAlreadyInitialized -> -33333
       | Other code -> code
       ;;
      

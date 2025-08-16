@@ -51,7 +51,6 @@ module Response :
               | ServerCancelled
               | ContentModified
               | RequestCancelled
-              | ServerAlreadyInitialized
               | Other of int
             val of_int : int -> t
             val to_int : t -> int
