@@ -1,4 +1,3 @@
-open Why3_lsp
-open Runtime
+open Why3_lsp.Runtime
 
 let () = loop ();;
