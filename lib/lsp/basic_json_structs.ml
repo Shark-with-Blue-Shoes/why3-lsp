@@ -2,10 +2,12 @@ open Yojson.Basic.Util
 open Yojson.Basic
 open Rpc
 
-type uri = string;;
+  type uri =
+    [ `String of string | `Null ];;
 
 let rooturi_of_json : t -> uri = function
-  | `String s -> s 
+  | `String s -> `String s 
+  | `Null -> `Null
   | json -> Type_error ("rootUri is of wrong type", json) |> raise;;
  
 type workspaceFolder = {
@@ -17,7 +19,7 @@ let opt_to_workspace_folders opt : [`Null | `WorkspaceFolders of workspaceFolder
 
   let json_workspace_folder : t -> workspaceFolder = function
     | `Assoc _ as json -> {
-      uri = (json |> get_req_mem "uri" |> to_string);
+      uri = (json |> get_req_mem "uri" |> rooturi_of_json);
       name = (json |> get_req_mem "name" |> to_string );
       }
     | json -> Type_error ("workspaceFolder is of wrong type", json) |> raise in

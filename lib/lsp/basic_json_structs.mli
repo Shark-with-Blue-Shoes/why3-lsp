@@ -1,5 +1,5 @@
 (*https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#uri*)
-type uri = string
+  type uri = [ `String of string | `Null ];;
 
 val rooturi_of_json : Yojson.Basic.t -> uri
 
