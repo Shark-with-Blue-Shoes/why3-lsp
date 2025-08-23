@@ -62,5 +62,5 @@ let rec loop () =
             interp cnt_len "type" body;
         loop ()
   with 
-  e -> Printexc.to_string e |> log_err; loop ();;
+  | e -> Printexc.to_string e |> log_err; loop ();;
 

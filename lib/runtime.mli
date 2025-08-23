@@ -23,4 +23,4 @@ of the bytes and the amount read*)
 val get_body : int -> string * int
 
 (*The main runtime*)
-val loop : unit -> 'a
+val loop : unit -> unit
